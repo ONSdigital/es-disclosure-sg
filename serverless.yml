@@ -1,0 +1,140 @@
+---
+service: es-disclosure-sg
+provider:
+  name: aws
+  deploymentBucket:
+    name: com.serverless.${self:provider.region}.results.ons.deploys
+  role: arn:aws:iam::014669633018:role/lambda_invoke_lambda
+  vpc:
+    securityGroupIds:
+      - ${file(../json_outputs/security_groups_output.json):SecurityGroups.0.GroupId}
+    subnetIds:
+      - ${file(../json_outputs/subnets_output.json):Subnets.0.SubnetId}
+      - ${file(../json_outputs/subnets_output.json):Subnets.1.SubnetId}
+  runtime: python3.7
+  region: eu-west-2
+  package:
+    individually: true
+  memorySize: 1024
+  timeout: 20
+  tracing:
+    lambda: true
+
+custom:
+  accounts: ${ssm:/aws/reference/secretsmanager/results-aws-accounts~true}
+  accountId: ${self:custom.accounts.account-id}
+
+functions:
+  deploy-stage-1-wrangler:
+    name: es-disclosure-stage-1-wrangler
+    handler: stage1_wrangler.lambda_handler
+    package:
+      include:
+        - stage1_wrangler.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+    tags:
+      app: results
+    environment:
+      checkpoint: 5
+      bucket_name: results-s3-bucket
+      in_file_name: aggregation_out.json
+      incoming_message_group: agg-combiner
+      method_name: es-disclosure-stage-1-method
+      out_file_name: stage1_out.json
+      sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
+      sqs_message_group_id: stage1-out
+      sqs_queue_url: https://sqs.eu-west-2.amazonaws.com/${self:custom.accountId}/BMI_Results.fifo
+
+  deploy-stage-1-method:
+    name: es-disclosure-stage-1-method
+    handler: stage1_method.lambda_handler
+    package:
+      include:
+        - stage1_method.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
+    tags:
+      app: results
+
+  deploy-stage-2-wrangler:
+    name: es-disclosure-stage-2-wrangler
+    handler: stage2_wrangler.lambda_handler
+    package:
+      include:
+        - stage2_wrangler.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+    tags:
+      app: results
+    environment:
+      checkpoint: 5
+      bucket_name: results-s3-bucket
+      in_file_name: stage1_out.json
+      incoming_message_group: stage1-out
+      method_name: es-disclosure-stage-2-method
+      out_file_name: stage2_out.json
+      sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
+      sqs_message_group_id: stage2-out
+      sqs_queue_url: https://sqs.eu-west-2.amazonaws.com/${self:custom.accountId}/BMI_Results.fifo
+
+
+  deploy-stage-2-method:
+    name: es-disclosure-stage-2-method
+    handler: stage2_method.lambda_handler
+    package:
+      include:
+        - stage2_method.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
+    tags:
+      app: results
+
+  deploy-stage-5-wrangler:
+    name: es-disclosure-stage-5-wrangler
+    handler: stage5_wrangler.lambda_handler
+    package:
+      include:
+        - stage5_wrangler.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+    tags:
+      app: results
+    environment:
+      checkpoint: 5
+      bucket_name: results-s3-bucket
+      in_file_name: stage2_out.json
+      incoming_message_group: stage2-out
+      method_name: es-disclosure-stage-5-method
+      out_file_name: stage5_out.json
+      sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
+      sqs_message_group_id: stage5-out
+      sqs_queue_url: https://sqs.eu-west-2.amazonaws.com/${self:custom.accountId}/BMI_Results.fifo
+
+  deploy-stage-5-method:
+    name: es-disclosure-stage-5-method
+    handler: stage5_method.lambda_handler
+    package:
+      include:
+        - stage5_method.py
+      exclude:
+        - ./**
+    layers:
+      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
+    tags:
+      app: results
+plugins:
+  - serverless-latest-layer-version
