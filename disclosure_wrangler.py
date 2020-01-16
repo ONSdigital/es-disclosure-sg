@@ -13,7 +13,6 @@ class EnvironSchema(Schema):
     """
     Class to set up the environment variables schema.
     """
-
     checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
     in_file_name = fields.Str(required=True)
@@ -23,27 +22,35 @@ class EnvironSchema(Schema):
     sns_topic_arn = fields.Str(required=True)
     sqs_message_group_id = fields.Str(required=True)
     sqs_queue_url = fields.Str(required=True)
+    csv_file_name = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
     """
-    Main entry point into wrangler
-    :param event: json payload containing:
-        RuntimeVariables:{
-            disclosivity_marker: The name of the column to put 'disclosive' marker.
-            publishable_indicator: The name of the column to put 'publish' marker.
-            explanation: The name of the column to put reason for pass/fail.
-            total_column: The name of the column holding the cell total.
-            top1_column: The name of the column largest contributor to the cell.
-            top2_column: The name of the column second largest contributor to the cell.
-        }
+    Responsible for executing specified disclosure methods, masking values which could
+    be used to identify specific responders.
+    :param event: JSON payload containing:
+    RuntimeVariables:{
+        disclosivity_marker: The name of the column to put 'disclosive' marker.
+        publishable_indicator: The name of the column to put 'publish' marker.
+        explanation: The name of the column to put reason for pass/fail.
+        total_column: The name of the column holding the cell total.
+        parent_column: The name of the column holding the count of parent company.
+        threshold: The threshold used in the disclosure steps.
+        cell_total_column: The name of the column holding the cell total.
+        top1_column: The name of the column largest contributor to the cell.
+        top2_column: The name of the column second largest contributor to the cell.
+        stage5_threshold: The threshold used in the disclosure calculation.
+        disclosure_stages: The stages of disclosure you wish to run e.g. (1 2 5)
+    }
     :param context: AWS Context Object.
-    :return: Success - True/False & Checkpoint
+    :return final_output: Dict containing either:
+        {"success": True, "checkpoint": <output - Type: String>}
+        {"success": False, "error": <error message - Type: String>}
     """
     logger = logging.getLogger("Disclosure Logger")
     logger.setLevel(logging.INFO)
-    current_module = "Disclosure Stage 5 Wrangler"
-
+    current_module = "Disclosure Wrangler"
     error_message = ""
     log_message = ""
     try:
@@ -51,7 +58,6 @@ def lambda_handler(event, context):
         config, errors = schema.load(os.environ)
         if errors:
             raise ValueError(f"Error validating environment parameters: {errors}")
-
         logger.info("Validated params")
 
         checkpoint = config['checkpoint']
@@ -63,15 +69,20 @@ def lambda_handler(event, context):
         sns_topic_arn = config["sns_topic_arn"]
         sqs_message_group_id = config["sqs_message_group_id"]
         sqs_queue_url = config["sqs_queue_url"]
+        csv_file_name = config["csv_file_name"]
 
         # Runtime Variables
         disclosivity_marker = event['RuntimeVariables']["disclosivity_marker"]
         publishable_indicator = event['RuntimeVariables']["publishable_indicator"]
         explanation = event['RuntimeVariables']["explanation"]
+        total_column = event['RuntimeVariables']["total_column"]
+        parent_column = event['RuntimeVariables']["parent_column"]
+        threshold = event['RuntimeVariables']["threshold"]
         cell_total_column = event['RuntimeVariables']["cell_total_column"]
         top1_column = event['RuntimeVariables']["top1_column"]
         top2_column = event['RuntimeVariables']["top2_column"]
         stage5_threshold = event['RuntimeVariables']["stage5_threshold"]
+        disclosure_stages = event['RuntimeVariables']["disclosure_stages"]
 
         # Set up clients
         sqs = boto3.client("sqs", "eu-west-2")
@@ -82,47 +93,90 @@ def lambda_handler(event, context):
                                                            incoming_message_group)
         logger.info("Successfully retrieved data")
 
+        data[disclosivity_marker] = None
+        data[publishable_indicator] = None
+        data[explanation] = None
+
         formatted_data = data.to_json(orient="records")
 
-        json_payload = {
+        disclosure_stages_list = disclosure_stages.split()
+        disclosure_stages_list.sort()
+
+        generic_json_payload = {
             "json_data": formatted_data,
             "disclosivity_marker": disclosivity_marker,
             "publishable_indicator": publishable_indicator,
             "explanation": explanation,
+        }
+
+        stage1_payload = {
+            "total_column": total_column
+        }
+
+        stage2_payload = {
+            "parent_column": parent_column,
+            "threshold": threshold
+        }
+
+        stage3_payload = {
+        }
+
+        stage4_payload = {
+        }
+
+        stage5_payload = {
             "top1_column": top1_column,
             "top2_column": top2_column,
             "cell_total_column": cell_total_column,
             "threshold": stage5_threshold
         }
 
-        returned_data = lambda_client.invoke(
-            FunctionName=method_name, Payload=json.dumps(json_payload)
-        )
+        for disclosure_step in disclosure_stages_list:
 
-        json_response = json.loads(returned_data.get("Payload").read().decode("UTF-8"))
+            payload_array = [generic_json_payload, stage1_payload, stage2_payload,
+                             stage3_payload, stage4_payload, stage5_payload]
 
-        if not json_response['success']:
-            raise exception_classes.MethodFailure(json_response['error'])
-        logger.info("Successfully invoked lambda")
+            # Find the specific location where the stage number need to be inserted and
+            # constructs the relevant method name using the disclosure stage number.
+            index = method_name.find('-method')
+            lambda_name = method_name[:index] + disclosure_step + method_name[index:]
 
-        dataframe_final_output = pd.DataFrame(json.loads(json_response['data']))
+            # Combines the generic payload and the stage specific payload.
+            combined_input = {**payload_array[0], **(payload_array[int(disclosure_step)])}
 
-        aws_functions.write_dataframe_to_csv(dataframe_final_output,
-                                             bucket_name, "output/final_output.csv")
+            formatted_data = invoke_method(lambda_name,
+                                           combined_input,
+                                           lambda_client)
 
-        logger.info("Successfully saved data to CSV")
+            if not formatted_data['success']:
+                raise exception_classes.MethodFailure(formatted_data['error'])
 
-        aws_functions.save_data(bucket_name, out_file_name, json_response['data'],
+            logger.info("Successfully invoked stage " + disclosure_step + " lambda")
+
+            # Located here as after the first loop it requires formatted data to be
+            # referenced with 'data' and the JSON needs to be reset to use the right data.
+            generic_json_payload = {
+                "json_data": formatted_data['data'],
+                "disclosivity_marker": disclosivity_marker,
+                "publishable_indicator": publishable_indicator,
+                "explanation": explanation,
+            }
+
+        aws_functions.save_data(bucket_name, out_file_name, formatted_data['data'],
                                 sqs_queue_url, sqs_message_group_id)
 
         logger.info("Successfully sent data to s3")
+
+        output_data = formatted_data['data']
+
+        aws_functions.write_dataframe_to_csv(pd.read_json(output_data, dtype=False),
+                                             bucket_name, csv_file_name)
+
         if receipt_handle:
-            sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=receipt_handle)
-        logger.info("Successfully deleted input data from s3")
+            sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=str(receipt_handle))
+            logger.info("Successfully deleted input data from s3")
 
-        logger.info(aws_functions.delete_data(bucket_name, in_file_name))
-
-        aws_functions.send_sns_message(checkpoint, sns_topic_arn, "Stage 5 Disclosure.")
+        aws_functions.send_sns_message(checkpoint, sns_topic_arn, "Disclosure")
         logger.info("Successfully sent message to sns")
 
     except AttributeError as e:
@@ -163,6 +217,7 @@ def lambda_handler(event, context):
         log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
     except exception_classes.MethodFailure as e:
         error_message = e.error_message
+
         log_message = "Error in " + method_name + "."
     except Exception as e:
         error_message = ("General Error in "
@@ -178,4 +233,23 @@ def lambda_handler(event, context):
             return {"success": False, "error": error_message}
 
     logger.info("Successfully completed module: " + current_module)
+
     return {"success": True, "checkpoint": checkpoint}
+
+
+def invoke_method(lambda_execution_name, payload, lambda_client):
+    """
+    Invokes the given lambda, using the provided name and payload and translates it
+    into JSON.
+    :param lambda_execution_name: Name of the lambda you wish to execute - Type: String
+    :param payload: The Payload you are sending into the method - Type: JSON
+    :param lambda_client: The client object - Type: Service client instance
+    :return: formatted_data: The returned results from the method execution - Type: JSON
+    """
+    returned_data = lambda_client.invoke(
+        FunctionName=lambda_execution_name, Payload=json.dumps(payload)
+    )
+
+    formatted_data = json.loads(returned_data.get("Payload").read().decode("UTF-8"))
+
+    return formatted_data

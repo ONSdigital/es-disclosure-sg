@@ -1,12 +1,10 @@
 # es-disclosure
-The disclosure methods for surveys. This is merely applying 3 of 5 disclosure stages to the data to determine whether it 
-is publishable or not.
+The disclosure module allows the user to specify the steps which they wish to run against the data. e.g. 1, 2, 5. Currently Stages 1, 2, 5 are implemented but 3 & 4 are currently in development and are present as mocks.
 
-The disclosure methods rely on their being several aggregations produced by the 
-previous step.
-## Wranglers
-The wranglers for disclosure are virtually the same code for each. Things that will change in aws are some environment variables, and the runtime variables sent in. This just needs to point to the appropriate 
- method(eg, stage 1 uses the stage1_method, etc)
+The disclosure methods relies on their being several aggregations produced by the previous step. Refer to aggregation for more information.
+
+## Wrangler
+Disclosure utilises a single wrangler to orchestrated which method stages are triggered. This is specified via the disclosure_stages runtime variable.
 
 ### Common Environment Variables
 Each wrangler has these variables:<br>
@@ -19,6 +17,21 @@ out_file_name: - The filename this wrangler uses to save its output.<br>
 sns_topic_arn: - The sns topic to send summary information to.<br>
 sqs_message_group_id: - The message group this wrangler will attach to its output message.<Br>
 sqs_queue_url: - The sqs queue url to use in sending/receiving sqs messages.<br>
+csv_file_name: - The path and name of the file you wish to save the csv as.<br>
+
+### Runtime variables
+These are the runtime variables that need to be present for the module to work correctly.<br>
+disclosivity_marker: -  Marks if the data is disclosive or not.<br>
+publishable_indicator: - Marks if the data should be published or not.<br>
+explanation: - The reason why something has been marked as disclosive.<br>
+total_column: - The name which is used for the total column in aggregation.<br>
+parent_column: - The name of the reference of the parent company<br>
+threshold: - The threshold used in the calculation of one of the disclosure calculations.<br>
+cell_total_column: - The name given to the cell total column.<br>
+top1_column: - The name of the column that holds the largest contributor cell.<br>
+top2_column: - The name of the column that holds the second largest contributor cell.<br>
+stage5_threshold: - The threshold used in the calculation of one of the disclosure calculations.<br>
+disclosure_stages: - The stages of disclosure you wish to run e.g. 1, 2, 5.<br>
 
 ### General process: <br>
 - Collect the data from sqs <br>
@@ -28,40 +41,6 @@ sqs_queue_url: - The sqs queue url to use in sending/receiving sqs messages.<br>
 - Delete input message from sqs <br>
 - Send summary info to sns. <br>
 <br>
-
-### Stage 1
-
-Additionally creates the Disclosive, Publish, and Reason columns to hold the results of
-disclosure.
- 
-- Disclosive - Indicates whether the data is disclosive or not<br>
-- Publish - Can this data be published<br>
-- Reason - If data can/cannot be published, this is why.<br>
-
-#### Runtime Variables Required:<br>
-disclosivity_marker: The name of the column to put 'disclosive' marker. <br>
-publishable_indicator: The name of the column to put 'publish' marker. <br>
-explanation: The name of the column to put reason for pass/fail. <br>
-total_column: The name of the column holding the cell total. <br>
-
-### Stage 2
-
-#### Runtime Variables Required:<br>
-disclosivity_marker: The name of the column to put 'disclosive' marker. <br>
-publishable_indicator: The name of the column to put 'publish' marker. <br>
-explanation: The name of the column to put reason for pass/fail. <br>
-parent_column: The name of the column holding the count of parent company.<br>
-threshold: The threshold above which a row is not disclosive.<br>
-
-### Stage 5
-
-#### Runtime Variables Required:<br>
-disclosivity_marker: The name of the column to put 'disclosive' marker. <br>
-publishable_indicator: The name of the column to put 'publish' marker. <br>
-explanation: The name of the column to put reason for pass/fail. <br>
-total_column: The name of the column holding the cell total. <br>
-top1_column: The name of the column largest contributor to the cell. <br>            
-top2_column: The name of the column second largest contributor to the cell.  <br>    
 
 ## Methods
 The methods perform the actual disclosure calculation. Each contains a method called 
@@ -117,6 +96,12 @@ threshold: The threshold above which a row is not disclosive.
 final_output: Dict containing either:<br>
             {"success": True, "data": < stage 2 output - json >}<br>
             {"success": False, "error": < error message - string >}<br>
+
+### Stage 3
+N/A
+
+### Stage 4
+N/A
 
 ### Stage 5
 
