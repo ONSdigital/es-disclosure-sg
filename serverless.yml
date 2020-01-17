@@ -83,7 +83,6 @@ functions:
     name: es-disclosure-stage-3-method-test
     handler: stage3_method.lambda_handler
     package:
-      individually: true
       include:
         - stage3_method.py
       exclude:
