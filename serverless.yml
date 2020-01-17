@@ -80,7 +80,7 @@ functions:
       app: results
 
   deploy-stage-3-method:
-    name: es-disclosure-stage-3-method-test
+    name: es-disclosure-stage-3-method
     handler: stage3_method.lambda_handler
     package:
       include:
@@ -93,7 +93,7 @@ functions:
       app: results
 
   deploy-stage-4-method:
-    name: es-disclosure-stage-4-method-test
+    name: es-disclosure-stage-4-method
     handler: stage4_method.lambda_handler
     package:
       individually: true
