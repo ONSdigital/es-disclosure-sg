@@ -70,7 +70,7 @@ def lambda_handler(event, context):
                                        cell_total_column,
                                        top1_column, top2_column,
                                        threshold)
-
+        disclosure_output['Score'] = disclosure_output['Score'].fillna(0)
         logger.info("Successfully completed Disclosure")
 
         final_output = {"data": disclosure_output.to_json(orient='records')}
