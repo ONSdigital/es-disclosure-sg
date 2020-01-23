@@ -6,6 +6,7 @@ from unittest import mock
 
 import pandas as pd
 from botocore.exceptions import ClientError, IncompleteReadError
+from es_aws_functions import exception_classes
 
 import disclosure_wrangler
 
@@ -28,7 +29,8 @@ mock_wrangles_event = {
     "top1_column": "largest_contributor",
     "top2_column": "second_largest_contributor",
     "stage5_threshold": "0.2",
-    "disclosure_stages": "5 2 1"
+    "disclosure_stages": "5 2 1",
+    "run_id": "bob"
   }
 }
 
@@ -85,63 +87,59 @@ class TestWrangler(unittest.TestCase):
 
         with open('tests/fixtures/methoddata.json') as file:
             mock_invoke_method.return_value = {"error": "METHOD_FAIL", "success": False}
-
-        result = disclosure_wrangler.lambda_handler(mock_wrangles_event,
-                                                    context_object)
-
-        assert("METHOD_FAIL" in result['error'])
+        with unittest.TestCase.assertRaises(
+                self, exception_classes.LambdaFailure) as exc_info:
+            disclosure_wrangler.lambda_handler(mock_wrangles_event,
+                                               context_object)
+        assert "METHOD_FAIL" in exc_info.exception.error_message
 
     @mock.patch('disclosure_wrangler.boto3.client')
     def test_attribute_error(self, mock_client):
         mock_client.side_effect = AttributeError("Oh no!")
-
-        result = disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
-
-        assert(not result['success'])
-        assert("Bad data encountered in" in result['error'])
+        with unittest.TestCase.assertRaises(
+                self, exception_classes.LambdaFailure) as exc_info:
+            disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
+        assert "Bad data encountered in" in exc_info.exception.error_message
 
     def test_value_error(self):
         os.environ.pop('bucket_name')
-
-        result = disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
+        with unittest.TestCase.assertRaises(
+                self, exception_classes.LambdaFailure) as exc_info:
+            disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
 
         os.environ['bucket_name'] = "testing"
-
-        assert(not result['success'])
-        assert("Parameter validation error" in result['error'])
+        assert "Parameter validation error" in exc_info.exception.error_message
 
     @mock.patch('disclosure_wrangler.boto3.client')
     def test_client_error(self, mock_client):
         mock_client.side_effect = ClientError({'Error': {'Code': '500'}}, '.')
-
-        result = disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
-
-        assert (not result['success'])
-        assert ("AWS Error" in result['error'])
+        with unittest.TestCase.assertRaises(
+                self, exception_classes.LambdaFailure) as exc_info:
+            disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
+        assert "AWS Error" in exc_info.exception.error_message
 
     @mock.patch('disclosure_wrangler.boto3.client')
     def test_key_error(self, mock_client):
         mock_client.side_effect = KeyError("Oh no!")
-
-        result = disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
-
-        assert(not result['success'])
-        assert("Key Error in" in result['error'])
+        with unittest.TestCase.assertRaises(
+                self, exception_classes.LambdaFailure) as exc_info:
+            disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
+            disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
+        assert "Key Error in" in exc_info.exception.error_message
 
     @mock.patch('disclosure_wrangler.boto3.client')
     def test_lambda_error(self, mock_client):
         mock_client.side_effect = IncompleteReadError(actual_bytes=0, expected_bytes=99)
-
-        result = disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
-
-        assert(not result['success'])
-        assert("Incomplete Lambda response encountered in " in result['error'])
+        with unittest.TestCase.assertRaises(
+                self, exception_classes.LambdaFailure) as exc_info:
+            disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
+        assert "Incomplete Lambda response encountered in " in \
+               exc_info.exception.error_message
 
     @mock.patch('disclosure_wrangler.boto3.client')
     def test_exception_error(self, mock_client):
         mock_client.side_effect = Exception("Oh no!")
-
-        result = disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
-
-        assert(not result['success'])
-        assert("General Error in " in result['error'])
+        with unittest.TestCase.assertRaises(
+                self, exception_classes.LambdaFailure) as exc_info:
+            disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
+        assert "General Error in" in exc_info.exception.error_message
