@@ -32,6 +32,7 @@ top1_column: - The name of the column that holds the largest contributor cell.<b
 top2_column: - The name of the column that holds the second largest contributor cell.<br>
 stage5_threshold: - The threshold used in the calculation of one of the disclosure calculations.<br>
 disclosure_stages: - The stages of disclosure you wish to run e.g. 1, 2, 5.<br>
+queue_url: - The sqs queue url to use in sending/receiving sqs messages.<br>
 
 ### General process: <br>
 - Collect the data from sqs <br>
