@@ -30,7 +30,8 @@ mock_wrangles_event = {
     "top2_column": "second_largest_contributor",
     "stage5_threshold": "0.2",
     "disclosure_stages": "5 2 1",
-    "run_id": "bob"
+    "run_id": "bob",
+    "queue_url": "Earl"
   }
 }
 
