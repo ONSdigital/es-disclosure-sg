@@ -48,7 +48,6 @@ functions:
       out_file_name: disclosure_out.json
       sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
       sqs_message_group_id: disclosure-out
-      sqs_queue_url: https://sqs.eu-west-2.amazonaws.com/${self:custom.accountId}/BMI_Results.fifo
       csv_file_name: output/final_output.csv
 
   deploy-stage-1-method:

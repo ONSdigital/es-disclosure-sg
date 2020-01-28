@@ -74,7 +74,6 @@ def lambda_handler(event, context):
         out_file_name = config['out_file_name']
         sns_topic_arn = config["sns_topic_arn"]
         sqs_message_group_id = config["sqs_message_group_id"]
-        sqs_queue_url = config["sqs_queue_url"]
         csv_file_name = config["csv_file_name"]
 
         # Runtime Variables
@@ -89,6 +88,7 @@ def lambda_handler(event, context):
         top2_column = event['RuntimeVariables']["top2_column"]
         stage5_threshold = event['RuntimeVariables']["stage5_threshold"]
         disclosure_stages = event['RuntimeVariables']["disclosure_stages"]
+        sqs_queue_url = event['RuntimeVariables']["queue_url"]
 
         # Set up clients
         sqs = boto3.client("sqs", "eu-west-2")
