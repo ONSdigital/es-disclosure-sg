@@ -70,7 +70,11 @@ def lambda_handler(event, context):
             if (counter == 0):
                 stage_1_output = disclosure_output
             else:
-                stage_1_output = stage_1_output.merge(disclosure_output,
+                keep_columns = [this_disclosivity_marker,
+                                this_explanation,
+                                this_publishable_indicator,
+                                reference]
+                stage_1_output = stage_1_output.merge(disclosure_output[keep_columns],
                                                       on=reference, how="left")
             counter += 1
             logger.info("Successfully completed Disclosure stage 1 for:"

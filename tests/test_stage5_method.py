@@ -41,7 +41,7 @@ mock_method_event_b = {
 
 
 class TestMethod(unittest.TestCase):
-    def test_happy_path_mike(self):
+    def test_happy_path(self):
         out = stage5_method.lambda_handler(mock_method_event, context_object)
         with open('tests/fixtures/outdata3.json') as file:
             output_data = file.read()
