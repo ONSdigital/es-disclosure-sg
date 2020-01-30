@@ -50,6 +50,7 @@ functions:
       sqs_message_group_id: disclosure-out
       sqs_queue_url: https://sqs.eu-west-2.amazonaws.com/${self:custom.accountId}/BMI_Results.fifo
       csv_file_name: output/final_output.csv
+      reference: responder_id
 
   deploy-stage-1-method:
     name: es-disclosure-stage-1-method

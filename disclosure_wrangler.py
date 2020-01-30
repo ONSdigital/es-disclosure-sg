@@ -22,6 +22,7 @@ class EnvironSchema(Schema):
     sns_topic_arn = fields.Str(required=True)
     sqs_message_group_id = fields.Str(required=True)
     csv_file_name = fields.Str(required=True)
+    reference = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -74,12 +75,13 @@ def lambda_handler(event, context):
         sns_topic_arn = config["sns_topic_arn"]
         sqs_message_group_id = config["sqs_message_group_id"]
         csv_file_name = config["csv_file_name"]
+        reference = config["reference"]
 
         # Runtime Variables
         disclosivity_marker = event['RuntimeVariables']["disclosivity_marker"]
         publishable_indicator = event['RuntimeVariables']["publishable_indicator"]
         explanation = event['RuntimeVariables']["explanation"]
-        total_column = event['RuntimeVariables']["total_column"]
+        total_columns = event['RuntimeVariables']["total_columns"]
         parent_column = event['RuntimeVariables']["parent_column"]
         threshold = event['RuntimeVariables']["threshold"]
         cell_total_column = event['RuntimeVariables']["cell_total_column"]
@@ -98,10 +100,6 @@ def lambda_handler(event, context):
                                                            incoming_message_group)
         logger.info("Successfully retrieved data")
 
-        data[disclosivity_marker] = None
-        data[publishable_indicator] = None
-        data[explanation] = None
-
         formatted_data = data.to_json(orient="records")
 
         disclosure_stages_list = disclosure_stages.split()
@@ -112,10 +110,11 @@ def lambda_handler(event, context):
             "disclosivity_marker": disclosivity_marker,
             "publishable_indicator": publishable_indicator,
             "explanation": explanation,
+            "total_columns": total_columns,
+            "reference": reference
         }
 
         stage1_payload = {
-            "total_column": total_column
         }
 
         stage2_payload = {
@@ -165,6 +164,8 @@ def lambda_handler(event, context):
                 "disclosivity_marker": disclosivity_marker,
                 "publishable_indicator": publishable_indicator,
                 "explanation": explanation,
+                "total_columns": total_columns,
+                "reference": reference
             }
 
         aws_functions.save_data(bucket_name, out_file_name, formatted_data['data'],

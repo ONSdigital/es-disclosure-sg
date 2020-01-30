@@ -12,8 +12,9 @@ class EnvironSchema(marshmallow.Schema):
     disclosivity_marker = marshmallow.fields.Str(required=True)
     publishable_indicator = marshmallow.fields.Str(required=True)
     explanation = marshmallow.fields.Str(required=True)
-    total_column = marshmallow.fields.Str(required=True)
+    total_columns = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
     json_data = marshmallow.fields.Str(required=True)
+    reference = marshmallow.fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -24,7 +25,7 @@ def lambda_handler(event, context):
             disclosivity_marker: The name of the column to put 'disclosive' marker.
             publishable_indicator: The name of the column to put 'publish' marker.
             explanation: The name of the column to put reason for pass/fail.
-            total_column: The name of the column holding the cell total.
+            total_columns: The names of the columns holding the cell totals.
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
             {"success": True, "data": <stage 1 output - json >}
@@ -47,19 +48,36 @@ def lambda_handler(event, context):
         disclosivity_marker = config['disclosivity_marker']
         publishable_indicator = config['publishable_indicator']
         explanation = config['explanation']
-        total_column = config['total_column']
+        reference = config['reference']
+        total_columns = config['total_columns']
 
         input_json = json.loads(config['json_data'])
 
         input_dataframe = pd.DataFrame(input_json)
+        stage_1_output = pd.DataFrame()
+        counter = 0
+        for total_column in total_columns:
+            this_disclosivity_marker = disclosivity_marker + "_" + total_column
+            this_publishable_indicator = publishable_indicator + "_" + total_column
+            this_explanation = explanation + "_" + total_column
+            this_total_column = "county_total_" + total_column
 
-        disclosure_output = disclosure(input_dataframe,
-                                       disclosivity_marker,
-                                       publishable_indicator,
-                                       explanation,
-                                       total_column)
+            disclosure_output = disclosure(input_dataframe,
+                                           this_disclosivity_marker,
+                                           this_publishable_indicator,
+                                           this_explanation,
+                                           this_total_column)
+            if (counter == 0):
+                stage_1_output = disclosure_output
+            else:
+                stage_1_output = stage_1_output.merge(disclosure_output,
+                                                      on=reference, how="left")
+            counter += 1
+            logger.info("Successfully completed Disclosure stage 1 for:"
+                        + str(total_column))
+
         logger.info("Successfully completed Disclosure")
-        final_output = {"data": disclosure_output.to_json(orient='records')}
+        final_output = {"data": stage_1_output.to_json(orient='records')}
 
     except ValueError as e:
         error_message = (
@@ -101,7 +119,7 @@ def disclosure(input_df, disclosivity_marker, publishable_indicator,
     :param disclosivity_marker: The name of the column to put 'disclosive' marker.
     :param publishable_indicator: The name of the column to put 'publish' marker.
     :param explanation: The name of the column to put reason for pass/fail.
-    :param total_column: The name of the column holding the cell total.
+    :param total_column - The name of the column to check.
     :return output_df: Input dataframe with the addition of stage1 disclosure info.
     """
 
