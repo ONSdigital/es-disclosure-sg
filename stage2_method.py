@@ -63,7 +63,7 @@ def lambda_handler(event, context):
 
         input_dataframe = pd.DataFrame(input_json)
         stage_2_output = pd.DataFrame()
-        counter = 0
+        first_loop = True
         for total_column in total_columns:
             this_disclosivity_marker = disclosivity_marker + "_" + total_column
             this_publishable_indicator = publishable_indicator + "_" + total_column
@@ -75,8 +75,9 @@ def lambda_handler(event, context):
                                            this_explanation,
                                            parent_column,
                                            threshold)
-            if (counter == 0):
+            if first_loop:
                 stage_2_output = disclosure_output
+                first_loop = False
             else:
                 these_disclosure_columns = [this_disclosivity_marker,
                                             this_explanation,
@@ -86,7 +87,7 @@ def lambda_handler(event, context):
                 stage_2_output = stage_2_output.merge(disclosure_output[keep_columns],
                                                       on=contributor_reference,
                                                       how="left")
-            counter += 1
+
             logger.info("Successfully completed Disclosure stage 2 for:"
                         + str(total_column))
 
