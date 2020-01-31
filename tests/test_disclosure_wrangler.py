@@ -33,7 +33,7 @@ mock_wrangles_event = {
     "run_id": "bob",
     "queue_url": "Earl",
     "total_columns": ["Q608_total"],
-    "reference": "responder_id"
+    "contributor_reference": "responder_id"
   }
 }
 
@@ -53,7 +53,7 @@ class TestWrangler(unittest.TestCase):
                 "sns_topic_arn": "testing",
                 "sqs_message_group_id": "testing",
                 "csv_file_name": "defiantly_not_a_cake",
-                "reference": "responder_id"
+                "contributor_reference": "responder_id"
             }
         )
 

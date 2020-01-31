@@ -15,7 +15,7 @@ class EnvironSchema(marshmallow.Schema):
     parent_column = marshmallow.fields.Str(required=True)
     threshold = marshmallow.fields.Str(required=True)
     json_data = marshmallow.fields.Str(required=True)
-    reference = marshmallow.fields.Str(required=True)
+    contributor_reference = marshmallow.fields.Str(required=True)
     total_columns = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
 
 
@@ -57,7 +57,7 @@ def lambda_handler(event, context):
         parent_column = config['parent_column']
         threshold = int(config['threshold'])
         total_columns = config['total_columns']
-        reference = config['reference']
+        contributor_reference = config['contributor_reference']
 
         input_json = json.loads(config['json_data'])
 
@@ -81,10 +81,11 @@ def lambda_handler(event, context):
                 these_disclosure_columns = [this_disclosivity_marker,
                                             this_explanation,
                                             this_publishable_indicator]
-                keep_columns = these_disclosure_columns + [reference]
+                keep_columns = these_disclosure_columns + [contributor_reference]
                 stage_2_output.drop(these_disclosure_columns, axis=1, inplace=True)
                 stage_2_output = stage_2_output.merge(disclosure_output[keep_columns],
-                                                      on=reference, how="left")
+                                                      on=contributor_reference,
+                                                      how="left")
             counter += 1
             logger.info("Successfully completed Disclosure stage 2 for:"
                         + str(total_column))

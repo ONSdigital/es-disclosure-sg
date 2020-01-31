@@ -22,7 +22,7 @@ mock_method_event = {
                 "top1_column": "top1",
                 "top2_column": "top2",
                 "threshold": "0.2",
-                "reference": "responder_id",
+                "contributor_reference": "responder_id",
                 "total_columns": ["Q608_total"]
             }
 
@@ -35,7 +35,7 @@ mock_method_event_b = {
                 "top1_column": "top1",
                 "top2_column": "top2",
                 "threshold": "0.2",
-                "reference": "responder_id",
+                "contributor_reference": "responder_id",
                 "total_columns": ["Q608_total", "Q606_other_gravel"]
             }
 
