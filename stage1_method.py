@@ -26,6 +26,7 @@ def lambda_handler(event, context):
             publishable_indicator: The name of the column to put 'publish' marker.
             explanation: The name of the column to put reason for pass/fail.
             total_columns: The names of the columns holding the cell totals.
+            contributor_reference: The name of the column holding the contributor id.
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
             {"success": True, "data": <stage 1 output - json >}

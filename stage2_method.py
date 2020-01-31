@@ -31,6 +31,7 @@ def lambda_handler(event, context):
             threshold: The threshold above which a row is not disclosive.
             total_columns: The names of the column holding the cell totals.
                         Included so that correct disclosure columns used.
+            contributor_reference: The name of the column holding the contributor id.
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
             {"success": True, "data": <stage 2 output - json >}
