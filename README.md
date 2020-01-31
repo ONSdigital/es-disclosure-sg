@@ -60,11 +60,13 @@ Checks whether the total for the cell is 0 or rounded to 0
 
 **Inputs:**
 
-json_data: input data.                                                   
-disclosivity_marker: The name of the column to put 'disclosive' marker. 
-publishable_indicator: The name of the column to put 'publish' marker.    
-explanation: The name of the column to put reason for pass/fail.
-cell_total_column: The name of the column holding the cell total.            
+json_data: input data.                                                   <Br>
+disclosivity_marker: The name of the column to put 'disclosive' marker. <Br>
+publishable_indicator: The name of the column to put 'publish' marker.    <Br>
+explanation: The name of the column to put reason for pass/fail.<Br>
+cell_total_column: The name of the column holding the cell total.<Br>
+total_columns: The names of the columns holding the cell totals.<Br>
+contributor_reference: The name of the column holding the contributor id.            
 
 **Outputs:**
 
@@ -85,12 +87,14 @@ certain threshold.
 
 **Inputs:**
 
-json_data: input data.                                                    
-disclosivity_marker: The name of the column to put 'disclosive' marker.  
-publishable_indicator: The name of the column to put 'publish' marker.     
-explanation: The name of the column to put reason for pass/fail. 
-parent_column: The name of the column holding the count of parent company
-threshold: The threshold above which a row is not disclosive.            
+json_data: input data.                                                    <Br>
+disclosivity_marker: The name of the column to put 'disclosive' marker.  <Br>
+publishable_indicator: The name of the column to put 'publish' marker.     <Br>
+explanation: The name of the column to put reason for pass/fail. <Br>
+parent_column: The name of the column holding the count of parent company.<Br>
+threshold: The threshold above which a row is not disclosive.  <Br>
+total_columns: The names of the column holding the cell totals. Included so that correct disclosure columns used.<Br>
+contributor_reference: The name of the column holding the contributor id.     <Br>    
 
 **Outputs:**
 
@@ -117,13 +121,15 @@ Not including the specifics of this test as it may be considered sensitive
 **Inputs:**
 
 json_data: input data.                                                      
-disclosivity_marker: The name of the column to put 'disclosive' marker.    
-publishable_indicator: The name of the column to put 'publish' marker.       
-explanation: The name of the column to put reason for pass/fail.   
+disclosivity_marker: The name of the column to put 'disclosive' marker.    <Br>
+publishable_indicator: The name of the column to put 'publish' marker.      <Br> 
+explanation: The name of the column to put reason for pass/fail.   <Br>
 cell_total_column: The name of the column holding the cell total.               
-top1_column: The name of the column largest contributor to the cell.
-top2_column: The name of the column second largest contributor to the cell.    
-
+top1_column: The name of the column largest contributor to the cell.<Br>
+top2_column: The name of the column second largest contributor to the cell.    <Br>
+total_columns: The names of the columns holding the cell totals. Included so that correct disclosure columns used.<Br>
+contributor_reference: The name of the column holding the contributor id.<Br>
+            
 **Outputs:**
 
 final_output: Dict containing either:<br>

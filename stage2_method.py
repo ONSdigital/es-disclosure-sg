@@ -15,6 +15,8 @@ class EnvironSchema(marshmallow.Schema):
     parent_column = marshmallow.fields.Str(required=True)
     threshold = marshmallow.fields.Str(required=True)
     json_data = marshmallow.fields.Str(required=True)
+    contributor_reference = marshmallow.fields.Str(required=True)
+    total_columns = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
 
 
 def lambda_handler(event, context):
@@ -27,6 +29,9 @@ def lambda_handler(event, context):
             explanation: The name of the column to put reason for pass/fail.
             parent_column: The name of the column holding the count of parent company.
             threshold: The threshold above which a row is not disclosive.
+            total_columns: The names of the column holding the cell totals.
+                        Included so that correct disclosure columns used.
+            contributor_reference: The name of the column holding the contributor id.
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
             {"success": True, "data": <stage 2 output - json >}
@@ -52,19 +57,43 @@ def lambda_handler(event, context):
         explanation = config['explanation']
         parent_column = config['parent_column']
         threshold = int(config['threshold'])
+        total_columns = config['total_columns']
+        contributor_reference = config['contributor_reference']
 
         input_json = json.loads(config['json_data'])
 
         input_dataframe = pd.DataFrame(input_json)
+        stage_2_output = pd.DataFrame()
+        first_loop = True
+        for total_column in total_columns:
+            this_disclosivity_marker = disclosivity_marker + "_" + total_column
+            this_publishable_indicator = publishable_indicator + "_" + total_column
+            this_explanation = explanation + "_" + total_column
 
-        disclosure_output = disclosure(input_dataframe,
-                                       disclosivity_marker,
-                                       publishable_indicator,
-                                       explanation,
-                                       parent_column,
-                                       threshold)
+            disclosure_output = disclosure(input_dataframe,
+                                           this_disclosivity_marker,
+                                           this_publishable_indicator,
+                                           this_explanation,
+                                           parent_column,
+                                           threshold)
+            if first_loop:
+                stage_2_output = disclosure_output
+                first_loop = False
+            else:
+                these_disclosure_columns = [this_disclosivity_marker,
+                                            this_explanation,
+                                            this_publishable_indicator]
+                keep_columns = these_disclosure_columns + [contributor_reference]
+                stage_2_output.drop(these_disclosure_columns, axis=1, inplace=True)
+                stage_2_output = stage_2_output.merge(disclosure_output[keep_columns],
+                                                      on=contributor_reference,
+                                                      how="left")
+
+            logger.info("Successfully completed Disclosure stage 2 for:"
+                        + str(total_column))
+
         logger.info("Successfully completed Disclosure")
-        final_output = {"data": disclosure_output.to_json(orient='records')}
+        final_output = {"data": stage_2_output.to_json(orient='records')}
 
     except ValueError as e:
         error_message = (

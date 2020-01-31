@@ -31,7 +31,9 @@ mock_wrangles_event = {
     "stage5_threshold": "0.2",
     "disclosure_stages": "5 2 1",
     "run_id": "bob",
-    "queue_url": "Earl"
+    "queue_url": "Earl",
+    "total_columns": ["Q608_total"],
+    "contributor_reference": "responder_id"
   }
 }
 
@@ -50,8 +52,8 @@ class TestWrangler(unittest.TestCase):
                 "out_file_name": "testing",
                 "sns_topic_arn": "testing",
                 "sqs_message_group_id": "testing",
-                "sqs_queue_url": "testing",
-                "csv_file_name": "defiantly_not_a_cake"
+                "csv_file_name": "defiantly_not_a_cake",
+                "contributor_reference": "responder_id"
             }
         )
 
@@ -124,7 +126,6 @@ class TestWrangler(unittest.TestCase):
         mock_client.side_effect = KeyError("Oh no!")
         with unittest.TestCase.assertRaises(
                 self, exception_classes.LambdaFailure) as exc_info:
-            disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
             disclosure_wrangler.lambda_handler(mock_wrangles_event, context_object)
         assert "Key Error in" in exc_info.exception.error_message
 
