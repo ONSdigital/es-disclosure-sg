@@ -61,7 +61,7 @@ def lambda_handler(event, context):
             this_disclosivity_marker = disclosivity_marker + "_" + total_column
             this_publishable_indicator = publishable_indicator + "_" + total_column
             this_explanation = explanation + "_" + total_column
-            this_total_column = "county_total_" + total_column
+            this_total_column = "cell_total_" + total_column
 
             disclosure_output = disclosure(input_dataframe,
                                            this_disclosivity_marker,
