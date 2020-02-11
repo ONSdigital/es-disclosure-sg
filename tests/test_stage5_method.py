@@ -15,23 +15,42 @@ with open('tests/fixtures/indata2and3.json') as file:
 
 mock_method_event = {
                 "json_data": input_data,
-                "disclosivity_marker": "NotMike",
-                "publishable_indicator": "Mike",
-                "explanation": "Kris",
-                "cell_total_column": "Q608_total",
+                "disclosivity_marker": "disclosive",
+                "publishable_indicator": "publish",
+                "explanation": "reason",
+                "cell_total_column": "county_total",
                 "top1_column": "top1",
                 "top2_column": "top2",
-                "threshold": "0.2"
+                "threshold": "0.2",
+                "contributor_reference": "responder_id",
+                "total_columns": ["Q608_total"]
+            }
+
+mock_method_event_b = {
+                "json_data": input_data,
+                "disclosivity_marker": "disclosive",
+                "publishable_indicator": "publish",
+                "explanation": "reason",
+                "cell_total_column": "county_total",
+                "top1_column": "top1",
+                "top2_column": "top2",
+                "threshold": "0.2",
+                "contributor_reference": "responder_id",
+                "total_columns": ["Q608_total", "Q606_other_gravel"]
             }
 
 
 class TestMethod(unittest.TestCase):
     def test_happy_path(self):
         out = stage5_method.lambda_handler(mock_method_event, context_object)
-
         with open('tests/fixtures/outdata3.json') as file:
             output_data = file.read()
+        assert(out['data'] == output_data)
 
+    def test_happy_path_multiple_columns(self):
+        out = stage5_method.lambda_handler(mock_method_event_b, context_object)
+        with open('tests/fixtures/outdata3_b.json') as file:
+            output_data = file.read()
         assert(out['data'] == output_data)
 
     def test_value_error(self):

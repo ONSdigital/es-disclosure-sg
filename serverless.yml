@@ -48,6 +48,7 @@ functions:
       sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
       sqs_message_group_id: disclosure-out
       csv_file_name: output/final_output.csv
+      contributor_reference: responder_id
 
   deploy-stage-1-method:
     name: es-disclosure-stage-1-method
