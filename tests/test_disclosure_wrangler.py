@@ -22,7 +22,6 @@ mock_wrangles_event = {
     "disclosivity_marker": "disclosive",
     "publishable_indicator": "publish",
     "explanation": "reason",
-    "total_column": "Q608_total",
     "parent_column": "ent_ref_count",
     "threshold": "3",
     "cell_total_column": "ent_ref_count",
@@ -32,6 +31,7 @@ mock_wrangles_event = {
     "disclosure_stages": "5 2 1",
     "run_id": "bob",
     "queue_url": "Earl",
+    "out_file_name": "disclosure_out.json",
     "total_columns": ["Q608_total"],
     "contributor_reference": "responder_id"
   }

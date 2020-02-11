@@ -18,7 +18,6 @@ class EnvironSchema(Schema):
     in_file_name = fields.Str(required=True)
     incoming_message_group = fields.Str(required=True)
     method_name = fields.Str(required=True)
-    out_file_name = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
     sqs_message_group_id = fields.Str(required=True)
     csv_file_name = fields.Str(required=True)
@@ -71,7 +70,6 @@ def lambda_handler(event, context):
         in_file_name = config['in_file_name']
         incoming_message_group = config['incoming_message_group']
         method_name = config["method_name"]
-        out_file_name = config['out_file_name']
         sns_topic_arn = config["sns_topic_arn"]
         sqs_message_group_id = config["sqs_message_group_id"]
         csv_file_name = config["csv_file_name"]
@@ -90,6 +88,7 @@ def lambda_handler(event, context):
         stage5_threshold = event['RuntimeVariables']["stage5_threshold"]
         disclosure_stages = event['RuntimeVariables']["disclosure_stages"]
         sqs_queue_url = event['RuntimeVariables']["queue_url"]
+        out_file_name = event['RuntimeVariables']['out_file_name']
 
         # Set up clients
         sqs = boto3.client("sqs", "eu-west-2")

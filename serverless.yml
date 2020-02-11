@@ -45,7 +45,6 @@ functions:
       in_file_name: aggregation_out.json
       incoming_message_group: agg-combiner
       method_name: es-disclosure-stage--method
-      out_file_name: disclosure_out.json
       sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
       sqs_message_group_id: disclosure-out
       csv_file_name: output/final_output.csv
