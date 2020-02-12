@@ -13,6 +13,7 @@ class EnvironSchema(marshmallow.Schema):
     publishable_indicator = marshmallow.fields.Str(required=True)
     explanation = marshmallow.fields.Str(required=True)
     total_columns = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
+    cell_total_column = marshmallow.fields.Str(required=True)
     json_data = marshmallow.fields.Str(required=True)
     contributor_reference = marshmallow.fields.Str(required=True)
 
@@ -51,6 +52,7 @@ def lambda_handler(event, context):
         explanation = config['explanation']
         contributor_reference = config['contributor_reference']
         total_columns = config['total_columns']
+        cell_total_column = config['cell_total_column']
 
         input_json = json.loads(config['json_data'])
 
@@ -61,7 +63,7 @@ def lambda_handler(event, context):
             this_disclosivity_marker = disclosivity_marker + "_" + total_column
             this_publishable_indicator = publishable_indicator + "_" + total_column
             this_explanation = explanation + "_" + total_column
-            this_total_column = "cell_total_" + total_column
+            this_total_column = cell_total_column + "_" + total_column
 
             disclosure_output = disclosure(input_dataframe,
                                            this_disclosivity_marker,

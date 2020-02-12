@@ -115,6 +115,7 @@ def lambda_handler(event, context):
         }
 
         stage1_payload = {
+            "cell_total_column": cell_total_column
         }
 
         stage2_payload = {
