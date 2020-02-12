@@ -18,7 +18,8 @@ mock_method_event = {
                 "publishable_indicator": "publish",
                 "explanation": "reason",
                 "total_columns": ["Q608_total"],
-                "contributor_reference": "responder_id"
+                "contributor_reference": "responder_id",
+                "cell_total_column": "cell_total"
             }
 
 mock_method_event_b = {
@@ -27,7 +28,8 @@ mock_method_event_b = {
                 "publishable_indicator": "publish",
                 "explanation": "reason",
                 "total_columns": ["Q608_total", "Q606_other_gravel"],
-                "contributor_reference": "responder_id"
+                "contributor_reference": "responder_id",
+                "cell_total_column": "cell_total"
             }
 
 
