@@ -17,7 +17,7 @@ class EnvironSchema(marshmallow.Schema):
     cell_total_column = marshmallow.fields.Str(required=True)
     json_data = marshmallow.fields.Str(required=True)
     threshold = marshmallow.fields.Str(required=True)
-    contributor_reference = marshmallow.fields.Str(required=True)
+    unique_identifier = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
     total_columns = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
 
 
@@ -35,7 +35,7 @@ def lambda_handler(event, context):
             threshold: The threshold used in the disclosure calculation.
             total_columns: The names of the columns holding the cell totals.
                         Included so that correct disclosure columns used.
-            contributor_reference: The name of the column holding the contributor id.
+            unique_identifier: The name of the column holding the contributor id.
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
             {"success": True, "data": <stage 5 output - json >}
@@ -64,7 +64,7 @@ def lambda_handler(event, context):
         cell_total_column = config['cell_total_column']
         threshold = config['threshold']
         total_columns = config['total_columns']
-        contributor_reference = config['contributor_reference']
+        unique_identifier = config['unique_identifier']
 
         input_json = json.loads(config['json_data'])
 
@@ -92,10 +92,10 @@ def lambda_handler(event, context):
                 these_disclosure_columns = [this_disclosivity_marker,
                                             this_explanation,
                                             this_publishable_indicator]
-                keep_columns = these_disclosure_columns + [contributor_reference]
+                keep_columns = these_disclosure_columns + unique_identifier
                 stage_5_output.drop(these_disclosure_columns, axis=1, inplace=True)
                 stage_5_output = stage_5_output.merge(disclosure_output[keep_columns],
-                                                      on=contributor_reference,
+                                                      on=unique_identifier,
                                                       how="left")
 
             logger.info("Successfully completed Disclosure stage 5 for:"

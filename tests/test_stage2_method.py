@@ -18,7 +18,7 @@ mock_method_event = {
                 "explanation": "reason",
                 "parent_column": "enterprise_reference",
                 "threshold": "3",
-                "contributor_reference": "responder_id",
+                "unique_identifier": ["responder_id"],
                 "total_columns": ["Q608_total"]
             }
 
@@ -29,7 +29,7 @@ mock_method_event_b = {
                 "explanation": "reason",
                 "parent_column": "enterprise_reference",
                 "threshold": "3",
-                "contributor_reference": "responder_id",
+                "unique_identifier": ["responder_id"],
                 "total_columns": ["Q608_total", "Q606_other_gravel"]
             }
 
