@@ -21,7 +21,6 @@ class EnvironSchema(Schema):
     sns_topic_arn = fields.Str(required=True)
     sqs_message_group_id = fields.Str(required=True)
     csv_file_name = fields.Str(required=True)
-    contributor_reference = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -73,9 +72,9 @@ def lambda_handler(event, context):
         sns_topic_arn = config["sns_topic_arn"]
         sqs_message_group_id = config["sqs_message_group_id"]
         csv_file_name = config["csv_file_name"]
-        contributor_reference = config["contributor_reference"]
 
         # Runtime Variables
+        unique_identifier = event['RuntimeVariables']["unique_identifier"]
         disclosivity_marker = event['RuntimeVariables']["disclosivity_marker"]
         publishable_indicator = event['RuntimeVariables']["publishable_indicator"]
         explanation = event['RuntimeVariables']["explanation"]
@@ -111,10 +110,11 @@ def lambda_handler(event, context):
             "publishable_indicator": publishable_indicator,
             "explanation": explanation,
             "total_columns": total_columns,
-            "contributor_reference": contributor_reference
+            "unique_identifier": unique_identifier
         }
 
         stage1_payload = {
+            "cell_total_column": cell_total_column
         }
 
         stage2_payload = {
@@ -165,7 +165,7 @@ def lambda_handler(event, context):
                 "publishable_indicator": publishable_indicator,
                 "explanation": explanation,
                 "total_columns": total_columns,
-                "contributor_reference": contributor_reference
+                "unique_identifier": unique_identifier
             }
 
         aws_functions.save_data(bucket_name, out_file_name, formatted_data['data'],
