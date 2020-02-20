@@ -60,7 +60,7 @@ class TestWrangler(unittest.TestCase):
     def teardown_class(cls):
         cls.mock_os_patcher.stop()
 
-    @mock.patch('disclosure_wrangler.aws_functions.write_dataframe_to_csv')
+    @mock.patch('disclosure_wrangler.aws_functions.save_dataframe_to_csv')
     @mock.patch('disclosure_wrangler.aws_functions.save_data')
     @mock.patch('disclosure_wrangler.boto3.client')
     @mock.patch('disclosure_wrangler.invoke_method')
