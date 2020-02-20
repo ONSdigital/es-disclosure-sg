@@ -42,12 +42,8 @@ functions:
     environment:
       checkpoint: 5
       bucket_name: results-s3-bucket
-      in_file_name: aggregation_out.json
-      incoming_message_group_id: aggregation-combiner-out
       method_name: es-disclosure-stage--method
       sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
-      outgoing_message_group_id: disclosure-out
-      out_file_name: output/final_output.csv
 
   deploy-stage-1-method:
     name: es-disclosure-stage-1-method
