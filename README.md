@@ -10,14 +10,9 @@ Disclosure utilises a single wrangler to orchestrated which method stages are tr
 Each wrangler has these variables:<br>
 checkpoint:    - Used by step function for starting part way through the process.(default of 5)<br>
 bucket_name:   - The name of the bucket used to store data.<br>
-in_file_name:  - The default input file name to get from s3 (this is the previous methods out_file_name).<br>
-incoming_message_group: - The message group that this wranglers input message will arrive from (this is the previous methods sqs_message_group_id).<br>
 method_name:   - The method that this wrangler calls.<br>
-out_file_name: - The filename this wrangler uses to save its output.<br>
 sns_topic_arn: - The sns topic to send summary information to.<br>
-sqs_message_group_id: - The message group this wrangler will attach to its output message.<Br>
 sqs_queue_url: - The sqs queue url to use in sending/receiving sqs messages.<br>
-csv_file_name: - The path and name of the file you wish to save the csv as.<br>
 
 ### Runtime variables
 These are the runtime variables that need to be present for the module to work correctly.<br>
@@ -33,6 +28,10 @@ top2_column: - The name of the column that holds the second largest contributor 
 stage5_threshold: - The threshold used in the calculation of one of the disclosure calculations.<br>
 disclosure_stages: - The stages of disclosure you wish to run e.g. 1, 2, 5.<br>
 queue_url: - The sqs queue url to use in sending/receiving sqs messages.<br>
+in_file_name:  - The default input file name to get from s3 (this is the previous methods out_file_name).<br>
+incoming_message_group_id: - The message group that this wranglers input message will arrive from (this is the previous methods outgoing_message_group_id).<br>
+out_file_name: - The path and name of the file you wish to save the csv as.<br>
+outgoing_message_group_id: - The message group this wrangler will attach to its output message.<Br>
 
 ### General process: <br>
 - Collect the data from sqs <br>

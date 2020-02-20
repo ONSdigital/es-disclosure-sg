@@ -31,9 +31,12 @@ mock_wrangles_event = {
     "disclosure_stages": "5 2 1",
     "run_id": "bob",
     "queue_url": "Earl",
+    "outgoing_message_group_id": "testing",
     "out_file_name": "disclosure_out.json",
     "total_columns": ["Q608_total"],
-    "unique_identifier": ["responder_id"]
+    "unique_identifier": ["responder_id"],
+    "in_file_name": "testing",
+    "incoming_message_group_id": "testing"
   }
 }
 
@@ -46,13 +49,8 @@ class TestWrangler(unittest.TestCase):
             {
                 "checkpoint": "testing",
                 "bucket_name": "testing",
-                "in_file_name": "testing",
-                "incoming_message_group": "testing",
                 "method_name": "es-disclosure-stage--method",
-                "out_file_name": "testing",
-                "sns_topic_arn": "testing",
-                "sqs_message_group_id": "testing",
-                "csv_file_name": "defiantly_not_a_cake"
+                "sns_topic_arn": "testing"
             }
         )
 

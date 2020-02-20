@@ -15,12 +15,8 @@ class EnvironSchema(Schema):
     """
     checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
-    in_file_name = fields.Str(required=True)
-    incoming_message_group = fields.Str(required=True)
     method_name = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
-    sqs_message_group_id = fields.Str(required=True)
-    csv_file_name = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -29,17 +25,23 @@ def lambda_handler(event, context):
     be used to identify specific responders.
     :param event: JSON payload containing:
     RuntimeVariables:{
-        disclosivity_marker: The name of the column to put 'disclosive' marker.
-        publishable_indicator: The name of the column to put 'publish' marker.
-        explanation: The name of the column to put reason for pass/fail.
-        total_column: The name of the column holding the cell total.
-        parent_column: The name of the column holding the count of parent company.
-        threshold: The threshold used in the disclosure steps.
         cell_total_column: The name of the column holding the cell total.
+        disclosivity_marker: The name of the column to put 'disclosive' marker.
+        disclosure_stages: The stages of disclosure you wish to run e.g. (1 2 5)
+        explanation: The name of the column to put reason for pass/fail.
+        in_file_name: Input file specified.
+        incoming_message_group_id: Input ID specified.
+        out_file_name: Output file specified.
+        outgoing_message_group_id: Output ID specified.
+        parent_column: The name of the column holding the count of parent company.
+        publishable_indicator: The name of the column to put 'publish' marker.
+        sqs_queue_url: The URL of the sqs queue used for the run.
+        stage5_threshold: The threshold used in the disclosure calculation.
+        threshold: The threshold used in the disclosure steps.
         top1_column: The name of the column largest contributor to the cell.
         top2_column: The name of the column second largest contributor to the cell.
-        stage5_threshold: The threshold used in the disclosure calculation.
-        disclosure_stages: The stages of disclosure you wish to run e.g. (1 2 5)
+        total_column: The name of the column holding the cell total.
+        unique_identifier: A list of the column names to specify a unique cell.
     }
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
@@ -64,30 +66,30 @@ def lambda_handler(event, context):
             raise ValueError(f"Error validating environment parameters: {errors}")
         logger.info("Validated params")
 
+        # Environment Variables
         checkpoint = config['checkpoint']
         bucket_name = config['bucket_name']
-        in_file_name = config['in_file_name']
-        incoming_message_group = config['incoming_message_group']
         method_name = config["method_name"]
         sns_topic_arn = config["sns_topic_arn"]
-        sqs_message_group_id = config["sqs_message_group_id"]
-        csv_file_name = config["csv_file_name"]
 
         # Runtime Variables
-        unique_identifier = event['RuntimeVariables']["unique_identifier"]
-        disclosivity_marker = event['RuntimeVariables']["disclosivity_marker"]
-        publishable_indicator = event['RuntimeVariables']["publishable_indicator"]
-        explanation = event['RuntimeVariables']["explanation"]
-        total_columns = event['RuntimeVariables']["total_columns"]
-        parent_column = event['RuntimeVariables']["parent_column"]
-        threshold = event['RuntimeVariables']["threshold"]
         cell_total_column = event['RuntimeVariables']["cell_total_column"]
+        disclosivity_marker = event['RuntimeVariables']["disclosivity_marker"]
+        disclosure_stages = event['RuntimeVariables']["disclosure_stages"]
+        explanation = event['RuntimeVariables']["explanation"]
+        in_file_name = event['RuntimeVariables']['in_file_name']
+        incoming_message_group_id = event['RuntimeVariables']['incoming_message_group_id']
+        out_file_name = event['RuntimeVariables']['out_file_name']
+        outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
+        parent_column = event['RuntimeVariables']["parent_column"]
+        publishable_indicator = event['RuntimeVariables']["publishable_indicator"]
+        sqs_queue_url = event['RuntimeVariables']["queue_url"]
+        stage5_threshold = event['RuntimeVariables']["stage5_threshold"]
+        threshold = event['RuntimeVariables']["threshold"]
         top1_column = event['RuntimeVariables']["top1_column"]
         top2_column = event['RuntimeVariables']["top2_column"]
-        stage5_threshold = event['RuntimeVariables']["stage5_threshold"]
-        disclosure_stages = event['RuntimeVariables']["disclosure_stages"]
-        sqs_queue_url = event['RuntimeVariables']["queue_url"]
-        out_file_name = event['RuntimeVariables']['out_file_name']
+        total_columns = event['RuntimeVariables']["total_columns"]
+        unique_identifier = event['RuntimeVariables']["unique_identifier"]
 
         # Set up clients
         sqs = boto3.client("sqs", "eu-west-2")
@@ -95,7 +97,7 @@ def lambda_handler(event, context):
 
         data, receipt_handle = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                            in_file_name,
-                                                           incoming_message_group,
+                                                           incoming_message_group_id,
                                                            run_id)
         logger.info("Successfully retrieved data")
 
@@ -169,14 +171,14 @@ def lambda_handler(event, context):
             }
 
         aws_functions.save_data(bucket_name, out_file_name, formatted_data['data'],
-                                sqs_queue_url, sqs_message_group_id, run_id)
+                                sqs_queue_url, outgoing_message_group_id, run_id)
 
         logger.info("Successfully sent data to s3")
 
         output_data = formatted_data['data']
 
         aws_functions.write_dataframe_to_csv(pd.read_json(output_data, dtype=False),
-                                             bucket_name, csv_file_name)
+                                             bucket_name, out_file_name)
 
         if receipt_handle:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=str(receipt_handle))
