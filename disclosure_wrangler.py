@@ -177,8 +177,8 @@ def lambda_handler(event, context):
 
         output_data = formatted_data['data']
 
-        aws_functions.write_dataframe_to_csv(pd.read_json(output_data, dtype=False),
-                                             bucket_name, out_file_name)
+        aws_functions.save_dataframe_to_csv(pd.read_json(output_data, dtype=False),
+                                            bucket_name, out_file_name)
 
         if receipt_handle:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=str(receipt_handle))
