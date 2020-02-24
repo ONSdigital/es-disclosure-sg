@@ -79,6 +79,7 @@ def lambda_handler(event, context):
         explanation = event['RuntimeVariables']["explanation"]
         in_file_name = event['RuntimeVariables']['in_file_name']
         incoming_message_group_id = event['RuntimeVariables']['incoming_message_group_id']
+        location = event['RuntimeVariables']['location']
         out_file_name = event['RuntimeVariables']['out_file_name']
         outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
         parent_column = event['RuntimeVariables']["parent_column"]
@@ -98,7 +99,7 @@ def lambda_handler(event, context):
         data, receipt_handle = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
                                                            in_file_name,
                                                            incoming_message_group_id,
-                                                           run_id)
+                                                           location)
         logger.info("Successfully retrieved data")
 
         formatted_data = data.to_json(orient="records")
@@ -171,14 +172,14 @@ def lambda_handler(event, context):
             }
 
         aws_functions.save_data(bucket_name, out_file_name, formatted_data['data'],
-                                sqs_queue_url, outgoing_message_group_id, run_id)
+                                sqs_queue_url, outgoing_message_group_id, location)
 
         logger.info("Successfully sent data to s3")
 
         output_data = formatted_data['data']
 
         aws_functions.save_dataframe_to_csv(pd.read_json(output_data, dtype=False),
-                                            bucket_name, out_file_name)
+                                            bucket_name, out_file_name, location)
 
         if receipt_handle:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=str(receipt_handle))
