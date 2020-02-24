@@ -36,7 +36,8 @@ mock_wrangles_event = {
     "total_columns": ["Q608_total"],
     "unique_identifier": ["responder_id"],
     "in_file_name": "testing",
-    "incoming_message_group_id": "testing"
+    "incoming_message_group_id": "testing",
+    "location": "Here"
   }
 }
 
