@@ -43,7 +43,6 @@ functions:
       checkpoint: 5
       bucket_name: results-s3-bucket
       method_name: es-disclosure-stage--method
-      sns_topic_arn: arn:aws:sns:eu-west-2:${self:custom.accountId}:BMIResults
 
   deploy-stage-1-method:
     name: es-disclosure-stage-1-method

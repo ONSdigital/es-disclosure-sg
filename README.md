@@ -11,7 +11,6 @@ Each wrangler has these variables:<br>
 checkpoint:    - Used by step function for starting part way through the process.(default of 5)<br>
 bucket_name:   - The name of the bucket used to store data.<br>
 method_name:   - The method that this wrangler calls.<br>
-sns_topic_arn: - The sns topic to send summary information to.<br>
 sqs_queue_url: - The sqs queue url to use in sending/receiving sqs messages.<br>
 
 ### Runtime variables
@@ -32,6 +31,7 @@ in_file_name:  - The default input file name to get from s3 (this is the previou
 incoming_message_group_id: - The message group that this wranglers input message will arrive from (this is the previous methods outgoing_message_group_id).<br>
 out_file_name: - The path and name of the file you wish to save the csv as.<br>
 outgoing_message_group_id: - The message group this wrangler will attach to its output message.<Br>
+sns_topic_arn: - The sns topic to send summary information to.<br>
 
 ### General process: <br>
 - Collect the data from sqs <br>

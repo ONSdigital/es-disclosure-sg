@@ -16,7 +16,6 @@ class EnvironSchema(Schema):
     checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
     method_name = fields.Str(required=True)
-    sns_topic_arn = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -70,7 +69,6 @@ def lambda_handler(event, context):
         checkpoint = config['checkpoint']
         bucket_name = config['bucket_name']
         method_name = config["method_name"]
-        sns_topic_arn = config["sns_topic_arn"]
 
         # Runtime Variables
         cell_total_column = event['RuntimeVariables']["cell_total_column"]
@@ -84,6 +82,7 @@ def lambda_handler(event, context):
         outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
         parent_column = event['RuntimeVariables']["parent_column"]
         publishable_indicator = event['RuntimeVariables']["publishable_indicator"]
+        sns_topic_arn = event['RuntimeVariables']["sns_topic_arn"]
         sqs_queue_url = event['RuntimeVariables']["queue_url"]
         stage5_threshold = event['RuntimeVariables']["stage5_threshold"]
         threshold = event['RuntimeVariables']["threshold"]
