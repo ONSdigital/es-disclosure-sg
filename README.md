@@ -2,7 +2,7 @@
 The disclosure module allows the user to specify the steps which they wish to run against the data. e.g. 1, 2, 5. Currently Stages 1, 2, 5 are implemented but 3 & 4 are currently in development and are present as mocks.
 
 The disclosure methods relies on their being several aggregations produced by the previous step. Refer to aggregation for more information.
-
+Mike
 ## Wrangler
 Disclosure utilises a single wrangler to orchestrated which method stages are triggered. This is specified via the disclosure_stages runtime variable.
 
