@@ -15,7 +15,6 @@ import stage5_method as lambda_method_function_5
 method_environment_variables = {}
 
 wrangler_environment_variables = {
-    "sns_topic_arn": "fake_sns_arn",
     "bucket_name": "test_bucket",
     "checkpoint": "999",
     "method_name": "es-disclosure-stage--method"
@@ -77,6 +76,7 @@ wrangler_runtime_variables = {
             "publishable_indicator": "publish",
             "queue_url": "test_url",
             "run_id": "bob",
+            "sns_topic_arn": "fake_sns_arn",
             "stage5_threshold": "0.1",
             "threshold": "3",
             "top1_column": "largest_contributor",
