@@ -71,8 +71,8 @@ wrangler_runtime_variables = {
             "in_file_name": "test_wrangler_input",
             "incoming_message_group_id": "test_wrangler_input",
             "location": "fixtures/",
-            "out_file_name": "test_wrangler_output",
-            "outgoing_message_group_id": "test_wrangler_output",
+            "out_file_name": "test_wrangler_output.json",
+            "outgoing_message_group_id": "test_wrangler_output.json",
             "parent_column": "ent_ref_count",
             "publishable_indicator": "publish",
             "queue_url": "test_url",
@@ -321,54 +321,54 @@ def test_method_success(which_lambda, which_runtime, which_input_file, which_out
     assert_frame_equal(produced_data, prepared_data)
 
 
-# @mock_s3
-# @mock.patch('strata_period_wrangler.aws_functions.get_dataframe',
-#             side_effect=test_generic_library.replacement_get_dataframe)
-# @mock.patch('strata_period_wrangler.aws_functions.save_data',
-#             side_effect=test_generic_library.replacement_save_data)
-# def test_wrangler_success(mock_s3_get, mock_s3_put):
-#     """
-#     Runs the wrangler function.
-#     :param mock_s3_get - Replacement Function For The Data Retrieval AWS Functionality.
-#     :param mock_s3_put - Replacement Function For The Data Saveing AWS Functionality.
-#     :return Test Pass/Fail
-#     """
-#     bucket_name = wrangler_environment_variables["bucket_name"]
-#     client = test_generic_library.create_bucket(bucket_name)
-#
-#     file_list = ["test_wrangler_input.json"]
-#
-#     test_generic_library.upload_files(client, bucket_name, file_list)
-#
-#     with open("tests/fixtures/test_method_output.json", "r") as file_2:
-#         test_data_out = file_2.read()
-#
-#     with mock.patch.dict(lambda_wrangler_function.os.environ,
-#                          wrangler_environment_variables):
-#         with mock.patch("strata_period_wrangler.boto3.client") as mock_client:
-#             mock_client_object = mock.Mock()
-#             mock_client.return_value = mock_client_object
-#
-#             mock_client_object.invoke.return_value.get.return_value.read \
-#                 .return_value.decode.return_value = json.dumps({
-#                  "data": test_data_out,
-#                  "success": True,
-#                  "anomalies": []
-#                 })
-#
-#             output = lambda_wrangler_function.lambda_handler(
-#                 wrangler_runtime_variables, test_generic_library.context_object
-#             )
-#
-#     with open("tests/fixtures/test_wrangler_prepared_output.json", "r") as file_3:
-#         test_data_prepared = file_3.read()
-#     prepared_data = pd.DataFrame(json.loads(test_data_prepared))
-#
-#     with open("tests/fixtures/" +
-#               wrangler_runtime_variables["RuntimeVariables"]["out_file_name"],
-#               "r") as file_4:
-#         test_data_produced = file_4.read()
-#     produced_data = pd.DataFrame(json.loads(test_data_produced))
-#
-#     assert output
-#     assert_frame_equal(produced_data, prepared_data)
+@mock_s3
+@mock.patch('disclosure_wrangler.aws_functions.get_dataframe',
+            side_effect=test_generic_library.replacement_get_dataframe)
+@mock.patch('disclosure_wrangler.aws_functions.save_data',
+            side_effect=test_generic_library.replacement_save_data)
+def test_wrangler_success(mock_s3_get, mock_s3_put):
+    """
+    Runs the wrangler function.
+    :param mock_s3_get - Replacement Function For The Data Retrieval AWS Functionality.
+    :param mock_s3_put - Replacement Function For The Data Saveing AWS Functionality.
+    :return Test Pass/Fail
+    """
+    bucket_name = wrangler_environment_variables["bucket_name"]
+    client = test_generic_library.create_bucket(bucket_name)
+
+    file_list = ["test_wrangler_input.json"]
+
+    test_generic_library.upload_files(client, bucket_name, file_list)
+
+    with open("tests/fixtures/test_method_5_prepared_output.json", "r") as file_1:
+        test_data_5_out = file_1.read()
+
+    with mock.patch.dict(lambda_wrangler_function.os.environ,
+                         wrangler_environment_variables):
+        with mock.patch("disclosure_wrangler.boto3.client") as mock_client:
+            mock_client_object = mock.Mock()
+            mock_client.return_value = mock_client_object
+
+            mock_client_object.invoke.return_value.get.return_value.read \
+                .return_value.decode.return_value = json.dumps({
+                 "data": test_data_5_out,
+                 "success": True,
+                 "anomalies": []
+                })
+
+            output = lambda_wrangler_function.lambda_handler(
+                wrangler_runtime_variables, test_generic_library.context_object
+            )
+
+    with open("tests/fixtures/test_wrangler_prepared_output.json", "r") as file_2:
+        test_data_prepared = file_2.read()
+    prepared_data = pd.DataFrame(json.loads(test_data_prepared))
+
+    with open("tests/fixtures/" +
+              wrangler_runtime_variables["RuntimeVariables"]["out_file_name"],
+              "r") as file_3:
+        test_data_produced = file_3.read()
+    produced_data = pd.DataFrame(json.loads(test_data_produced))
+
+    assert output
+    assert_frame_equal(produced_data, prepared_data)
