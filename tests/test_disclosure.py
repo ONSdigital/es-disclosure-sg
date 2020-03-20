@@ -205,12 +205,7 @@ def test_method_error(mock_s3_get):
       "Error validating environment param",
       test_generic_library.wrangler_assert)])
 def test_value_error(which_lambda, expected_message, assertion):
-    if expected_message == "Input Error in":
-        test_generic_library.value_error(
-            which_lambda, expected_message, assertion, environment_variables=False)
-    else:
-        test_generic_library.value_error(
-            which_lambda, expected_message, assertion)
+    test_generic_library.value_error(which_lambda, expected_message, assertion)
 
 ##########################################################################################
 #                                     Specific                                           #

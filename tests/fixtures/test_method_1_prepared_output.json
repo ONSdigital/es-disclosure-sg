@@ -10,7 +10,7 @@
         "Q608_total": 27995,
         "Q608_total_largest_contributor": 1222243,
         "Q608_total_second_largest_contributor": 980399,
-        "cell_total_Q608_total": 3574234,
+        "cell_total_Q608_total": 0,
         "county": 41,
         "county_name": "Grapefruit",
         "ent_ref_count": 6,
@@ -24,9 +24,9 @@
         "response_type": 2,
         "strata": "E",
         "survey": "066",
-        "disclosive_Q608_total": "Yes",
-        "publish_Q608_total": "Not Applicable",
-        "reason_Q608_total": "Through stage 1"
+        "disclosive_Q608_total": "No",
+        "publish_Q608_total": "Publish",
+        "reason_Q608_total": "Stage 1 - Total column is 0"
     },
     {
         "Q601_asphalting_sand": 0,
