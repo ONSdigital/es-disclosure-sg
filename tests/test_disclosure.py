@@ -40,7 +40,7 @@ method_runtime_variables_2 = {
         "json_data": None,
         "parent_column": "ent_ref_count",
         "publishable_indicator": "publish",
-        "threshold": "3",
+        "threshold": "7",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
         "unique_identifier": ["responder_id"]
     }
@@ -53,7 +53,7 @@ method_runtime_variables_5 = {
         "explanation": "reason",
         "json_data": None,
         "publishable_indicator": "publish",
-        "threshold": "0.1",
+        "threshold": "1",
         "top1_column": "largest_contributor",
         "top2_column": "second_largest_contributor",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
