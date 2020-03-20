@@ -7,10 +7,10 @@ from es_aws_functions import test_generic_library
 from moto import mock_s3
 from pandas.util.testing import assert_frame_equal
 
+import disclosure_wrangler as lambda_wrangler_function
 import stage1_method as lambda_method_function_1
 import stage2_method as lambda_method_function_2
 import stage5_method as lambda_method_function_5
-import disclosure_wrangler as lambda_wrangler_function
 
 method_environment_variables = {}
 
@@ -169,7 +169,8 @@ def test_key_error(which_lambda, expected_message,
             file_data = file_1.read()
         prepared_data = pd.DataFrame(json.loads(file_data))
         print(prepared_data)
-        which_runtime_variables['RuntimeVariables']['json_data'] = prepared_data.to_json(orient="records")
+        which_runtime_variables[
+            'RuntimeVariables']['json_data'] = prepared_data.to_json(orient="records")
         test_generic_library.key_error(which_lambda,
                                        expected_message, assertion,
                                        which_environment_variables,
