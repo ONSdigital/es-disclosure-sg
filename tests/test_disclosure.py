@@ -28,7 +28,7 @@ method_runtime_variables_1 = {
         "explanation": "reason",
         "json_data": None,
         "publishable_indicator": "publish",
-        "total_columns": ["Q608_total"],
+        "total_columns": ["Q608_total", "Q606_other_gravel"],
         "unique_identifier": ["responder_id"]
     }
 }
@@ -41,7 +41,7 @@ method_runtime_variables_2 = {
         "parent_column": "ent_ref_count",
         "publishable_indicator": "publish",
         "threshold": "3",
-        "total_columns": ["Q608_total"],
+        "total_columns": ["Q608_total", "Q606_other_gravel"],
         "unique_identifier": ["responder_id"]
     }
 }
@@ -56,7 +56,7 @@ method_runtime_variables_5 = {
         "threshold": "0.1",
         "top1_column": "largest_contributor",
         "top2_column": "second_largest_contributor",
-        "total_columns": ["Q608_total"],
+        "total_columns": ["Q608_total", "Q606_other_gravel"],
         "unique_identifier": ["responder_id"]
     }
 }
@@ -216,86 +216,111 @@ def test_value_error(which_lambda, expected_message, assertion):
 ##########################################################################################
 
 
-# def test_calculate_strata():
-#     """
-#     Runs the calculate_strata function that is called by the method.
-#     :param None
-#     :return Test Pass/Fail
-#     """
-#     with open("tests/fixtures/test_method_input.json", "r") as file_1:
-#         file_data = file_1.read()
-#     input_data = pd.DataFrame(json.loads(file_data))
-# 
-#     produced_data = input_data.apply(
-#         lambda_method_function.calculate_strata,
-#         strata_column="strata",
-#         value_column="Q608_total",
-#         survey_column="survey",
-#         region_column="region",
-#         axis=1,
-#     )
-#     produced_data = produced_data.sort_index(axis=1)
-# 
-#     with open("tests/fixtures/test_method_prepared_output.json", "r") as file_2:
-#         file_data = file_2.read()
-#     prepared_data = pd.DataFrame(json.loads(file_data))
-# 
-#     assert_frame_equal(produced_data, prepared_data)
-# 
-# 
-# @mock_s3
-# def test_method_success():
-#     """
-#     Runs the method function.
-#     :param None
-#     :return Test Pass/Fail
-#     """
-#     with mock.patch.dict(lambda_method_function.os.environ,
-#                          method_environment_variables):
-#         with open("tests/fixtures/test_method_prepared_output.json", "r") as file_1:
-#             file_data = file_1.read()
-#         prepared_data = pd.DataFrame(json.loads(file_data))
-# 
-#         with open("tests/fixtures/test_method_input.json", "r") as file_2:
-#             test_data = file_2.read()
-#         method_runtime_variables["RuntimeVariables"]["data"] = test_data
-# 
-#         output = lambda_method_function.lambda_handler(
-#             method_runtime_variables, test_generic_library.context_object)
-# 
-#         produced_data = pd.DataFrame(json.loads(output["data"]))
-# 
-#     assert output["success"]
-#     assert_frame_equal(produced_data, prepared_data)
-# 
-# 
-# def test_strata_mismatch_detector():
-#     """
-#     Runs the strata_mismatch_detector function that is called by the wrangler.
-#     :param None
-#     :return Test Pass/Fail
-#     """
-#     with open("tests/fixtures/test_method_output.json", "r") as file_1:
-#         test_data_in = file_1.read()
-#     method_data = pd.DataFrame(json.loads(test_data_in))
-# 
-#     produced_data, anomalies = lambda_wrangler_function.strata_mismatch_detector(
-#         method_data,
-#         "201809", "period",
-#         "responder_id", "strata",
-#         "good_strata",
-#         "current_period",
-#         "previous_period",
-#         "current_strata",
-#         "previous_strata")
-# 
-#     with open("tests/fixtures/test_wrangler_prepared_output.json", "r") as file_2:
-#         test_data_out = file_2.read()
-#     prepared_data = pd.DataFrame(json.loads(test_data_out))
-# 
-#     assert_frame_equal(produced_data, prepared_data)
-# 
-# 
+@mock_s3
+@pytest.mark.parametrize(
+    "which_lambda,which_runtime,which_input_file,which_output_file",
+    [(lambda_method_function_1,
+      method_runtime_variables_1,
+      "tests/fixtures/test_method_input.json",
+      "tests/fixtures/test_method_1_prepared_output.json"),
+     (lambda_method_function_2,
+      method_runtime_variables_2,
+      "tests/fixtures/test_method_1_prepared_output.json",
+      "tests/fixtures/test_method_2_prepared_output.json"),
+     (lambda_method_function_5,
+      method_runtime_variables_5,
+      "tests/fixtures/test_method_2_prepared_output.json",
+      "tests/fixtures/test_method_5_prepared_output.json")
+     ])
+def test_disclosure(which_lambda, which_runtime, which_input_file, which_output_file):
+    """
+    Runs the method function.
+    :param None
+    :return Test Pass/Fail
+    """
+    with open(which_input_file, "r") as file_1:
+        file_data = file_1.read()
+    in_data = pd.DataFrame(json.loads(file_data))
+
+    beginning = which_runtime["RuntimeVariables"]["total_columns"][0] + "_"
+    ending = "_" + which_runtime["RuntimeVariables"]["total_columns"][0]
+
+    if "top1_column" in which_runtime["RuntimeVariables"].keys():
+        produced_data = which_lambda.disclosure(
+            in_data,
+            which_runtime["RuntimeVariables"]["disclosivity_marker"] + ending,
+            which_runtime["RuntimeVariables"]["publishable_indicator"] + ending,
+            which_runtime["RuntimeVariables"]["explanation"] + ending,
+            which_runtime["RuntimeVariables"]["cell_total_column"] + ending,
+            beginning + which_runtime["RuntimeVariables"]["top1_column"],
+            beginning + which_runtime["RuntimeVariables"]["top2_column"],
+            which_runtime["RuntimeVariables"]["threshold"])
+    elif "parent_column" in which_runtime["RuntimeVariables"].keys():
+        produced_data = which_lambda.disclosure(
+            in_data,
+            which_runtime["RuntimeVariables"]["disclosivity_marker"] + ending,
+            which_runtime["RuntimeVariables"]["publishable_indicator"] + ending,
+            which_runtime["RuntimeVariables"]["explanation"] + ending,
+            which_runtime["RuntimeVariables"]["parent_column"],
+            which_runtime["RuntimeVariables"]["threshold"])
+    else:
+        produced_data = which_lambda.disclosure(
+            in_data,
+            which_runtime["RuntimeVariables"]["disclosivity_marker"] + ending,
+            which_runtime["RuntimeVariables"]["publishable_indicator"] + ending,
+            which_runtime["RuntimeVariables"]["explanation"] + ending,
+            which_runtime["RuntimeVariables"]["cell_total_column"] + ending)
+
+    with open(which_output_file, "r") as file_2:
+        file_data = file_2.read()
+    prepared_data = pd.DataFrame(json.loads(file_data))
+
+    produced_data = produced_data.sort_index(axis=1)
+
+    assert_frame_equal(produced_data, prepared_data)
+
+
+@mock_s3
+@pytest.mark.parametrize(
+    "which_lambda,which_runtime,which_input_file,which_output_file",
+    [(lambda_method_function_1,
+      method_runtime_variables_1,
+      "tests/fixtures/test_method_multi_input.json",
+      "tests/fixtures/test_method_1_multi_prepared_output.json"),
+     (lambda_method_function_2,
+      method_runtime_variables_2,
+      "tests/fixtures/test_method_1_multi_prepared_output.json",
+      "tests/fixtures/test_method_2_multi_prepared_output.json"),
+     (lambda_method_function_5,
+      method_runtime_variables_5,
+      "tests/fixtures/test_method_2_multi_prepared_output.json",
+      "tests/fixtures/test_method_5_multi_prepared_output.json")
+     ])
+def test_method_success(which_lambda, which_runtime, which_input_file, which_output_file):
+    """
+    Runs the method function.
+    :param None
+    :return Test Pass/Fail
+    """
+    with open(which_input_file, "r") as file_1:
+        file_data = file_1.read()
+    in_data = pd.DataFrame(json.loads(file_data))
+
+    which_runtime["RuntimeVariables"]["json_data"] = in_data.to_json(orient="records")
+
+    output = which_lambda.lambda_handler(
+        which_runtime, test_generic_library.context_object)
+
+    produced_data = pd.DataFrame(json.loads(output["data"]))
+
+    with open(which_output_file, "r") as file_2:
+        file_data = file_2.read()
+    prepared_data = pd.DataFrame(json.loads(file_data))
+
+    assert output["success"]
+    assert_frame_equal(produced_data, prepared_data)
+
+
 # @mock_s3
 # @mock.patch('strata_period_wrangler.aws_functions.get_dataframe',
 #             side_effect=test_generic_library.replacement_get_dataframe)
@@ -310,40 +335,40 @@ def test_value_error(which_lambda, expected_message, assertion):
 #     """
 #     bucket_name = wrangler_environment_variables["bucket_name"]
 #     client = test_generic_library.create_bucket(bucket_name)
-# 
+#
 #     file_list = ["test_wrangler_input.json"]
-# 
+#
 #     test_generic_library.upload_files(client, bucket_name, file_list)
-# 
+#
 #     with open("tests/fixtures/test_method_output.json", "r") as file_2:
 #         test_data_out = file_2.read()
-# 
+#
 #     with mock.patch.dict(lambda_wrangler_function.os.environ,
 #                          wrangler_environment_variables):
 #         with mock.patch("strata_period_wrangler.boto3.client") as mock_client:
 #             mock_client_object = mock.Mock()
 #             mock_client.return_value = mock_client_object
-# 
+#
 #             mock_client_object.invoke.return_value.get.return_value.read \
 #                 .return_value.decode.return_value = json.dumps({
 #                  "data": test_data_out,
 #                  "success": True,
 #                  "anomalies": []
 #                 })
-# 
+#
 #             output = lambda_wrangler_function.lambda_handler(
 #                 wrangler_runtime_variables, test_generic_library.context_object
 #             )
-# 
+#
 #     with open("tests/fixtures/test_wrangler_prepared_output.json", "r") as file_3:
 #         test_data_prepared = file_3.read()
 #     prepared_data = pd.DataFrame(json.loads(test_data_prepared))
-# 
+#
 #     with open("tests/fixtures/" +
 #               wrangler_runtime_variables["RuntimeVariables"]["out_file_name"],
 #               "r") as file_4:
 #         test_data_produced = file_4.read()
 #     produced_data = pd.DataFrame(json.loads(test_data_produced))
-# 
+#
 #     assert output
 #     assert_frame_equal(produced_data, prepared_data)

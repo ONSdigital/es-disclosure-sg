@@ -141,7 +141,7 @@ def disclosure(input_df, disclosivity_marker, publishable_indicator,
     """
     def run_disclosure(row):
         if row[publishable_indicator] != 'Publish':
-            if row[parent_column] < threshold:
+            if row[parent_column] < float(threshold):
                 row[disclosivity_marker] = 'Yes'
                 row[publishable_indicator] = 'No'
                 row[explanation] = 'Stage 2 - Only '\
