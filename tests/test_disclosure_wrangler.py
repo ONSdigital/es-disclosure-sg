@@ -37,7 +37,8 @@ mock_wrangles_event = {
     "unique_identifier": ["responder_id"],
     "in_file_name": "testing",
     "incoming_message_group_id": "testing",
-    "location": "Here"
+    "location": "Here",
+    "sns_topic_arn": "testing"
   }
 }
 
@@ -50,8 +51,7 @@ class TestWrangler(unittest.TestCase):
             {
                 "checkpoint": "testing",
                 "bucket_name": "testing",
-                "method_name": "es-disclosure-stage--method",
-                "sns_topic_arn": "testing"
+                "method_name": "es-disclosure-stage--method"
             }
         )
 
