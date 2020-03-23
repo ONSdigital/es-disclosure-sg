@@ -28,7 +28,8 @@ method_runtime_variables_1 = {
         "json_data": None,
         "publishable_indicator": "publish",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
-        "unique_identifier": ["responder_id"]
+        "unique_identifier": ["responder_id"],
+        "run_id": "666"
     }
 }
 
@@ -41,7 +42,8 @@ method_runtime_variables_2 = {
         "publishable_indicator": "publish",
         "threshold": "7",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
-        "unique_identifier": ["responder_id"]
+        "unique_identifier": ["responder_id"],
+        "run_id": "666"
     }
 }
 
@@ -56,7 +58,8 @@ method_runtime_variables_5 = {
         "top1_column": "largest_contributor",
         "top2_column": "second_largest_contributor",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
-        "unique_identifier": ["responder_id"]
+        "unique_identifier": ["responder_id"],
+        "run_id": "666"
     }
 }
 
@@ -97,7 +100,7 @@ wrangler_runtime_variables = {
     [
         (lambda_wrangler_function, wrangler_runtime_variables,
          wrangler_environment_variables, None,
-         "AWS Error", test_generic_library.wrangler_assert)
+         "ClientError", test_generic_library.wrangler_assert)
     ])
 def test_client_error(which_lambda, which_runtime_variables,
                       which_environment_variables, which_data,
@@ -113,16 +116,16 @@ def test_client_error(which_lambda, which_runtime_variables,
     [
         (lambda_method_function_1, method_runtime_variables_1,
          method_environment_variables, "stage1_method.EnvironSchema",
-         "General Error", test_generic_library.method_assert),
+         'Exception', test_generic_library.method_assert),
         (lambda_method_function_2, method_runtime_variables_1,
          method_environment_variables, "stage2_method.EnvironSchema",
-         "General Error", test_generic_library.method_assert),
+         'Exception', test_generic_library.method_assert),
         (lambda_method_function_5, method_runtime_variables_1,
          method_environment_variables, "stage5_method.EnvironSchema",
-         "General Error", test_generic_library.method_assert),
+         'Exception', test_generic_library.method_assert),
         (lambda_wrangler_function, wrangler_runtime_variables,
          wrangler_environment_variables, "disclosure_wrangler.EnvironSchema",
-         "General Error", test_generic_library.wrangler_assert)
+         'Exception', test_generic_library.wrangler_assert)
     ])
 def test_general_error(which_lambda, which_runtime_variables,
                        which_environment_variables, mockable_function,
@@ -142,7 +145,8 @@ def test_incomplete_read_error(mock_s3_get):
                                                wrangler_runtime_variables,
                                                wrangler_environment_variables,
                                                file_list,
-                                               "disclosure_wrangler")
+                                               "disclosure_wrangler",
+                                               "IncompleteReadError")
 
 
 @pytest.mark.parametrize(
@@ -156,7 +160,7 @@ def test_incomplete_read_error(mock_s3_get):
         (lambda_method_function_5, method_environment_variables,
          "KeyError", test_generic_library.method_assert, method_runtime_variables_5),
         (lambda_wrangler_function, wrangler_environment_variables,
-         "Key Error", test_generic_library.wrangler_assert, None)
+         "KeyError", test_generic_library.wrangler_assert, None)
     ])
 def test_key_error(which_lambda, expected_message,
                    assertion, which_environment_variables, which_runtime_variables):
