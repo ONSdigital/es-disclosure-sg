@@ -146,7 +146,7 @@ def test_incomplete_read_error(mock_s3_get):
 
 
 @pytest.mark.parametrize(
-    "which_lambda,expected_message,assertion,which_environment_variables," +
+    "which_lambda,which_environment_variables,expected_message,assertion," +
     "which_runtime_variables",
     [
         (lambda_method_function_1, method_environment_variables,
@@ -158,12 +158,12 @@ def test_incomplete_read_error(mock_s3_get):
         (lambda_wrangler_function, wrangler_environment_variables,
          "Key Error", test_generic_library.wrangler_assert, None)
     ])
-def test_key_error(which_lambda, expected_message,
-                   assertion, which_environment_variables, which_runtime_variables):
+def test_key_error(which_lambda, which_environment_variables, expected_message,
+                   assertion, which_runtime_variables):
     if which_runtime_variables is None:
         test_generic_library.key_error(which_lambda,
-                                       expected_message, assertion,
-                                       which_environment_variables)
+                                       which_environment_variables,
+                                       expected_message, assertion)
     else:
         with open("tests/fixtures/test_method_bad_input.json", "r") as file_1:
             file_data = file_1.read()
@@ -172,8 +172,8 @@ def test_key_error(which_lambda, expected_message,
         which_runtime_variables[
             'RuntimeVariables']['json_data'] = prepared_data.to_json(orient="records")
         test_generic_library.key_error(which_lambda,
-                                       expected_message, assertion,
                                        which_environment_variables,
+                                       expected_message, assertion,
                                        which_runtime_variables)
 
 
