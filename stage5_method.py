@@ -3,6 +3,7 @@ import logging
 
 import marshmallow
 import pandas as pd
+from es_aws_functions import general_functions
 
 
 class EnvironSchema(marshmallow.Schema):
@@ -19,6 +20,7 @@ class EnvironSchema(marshmallow.Schema):
     threshold = marshmallow.fields.Str(required=True)
     unique_identifier = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
     total_columns = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
+    run_id = marshmallow.fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -43,12 +45,15 @@ def lambda_handler(event, context):
     """
     current_module = "Disclosure Stage 5 Method"
     error_message = ''
-    log_message = ''
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
+    # Define run_id outside of try block
+    run_id = 0
     try:
+        # Retrieve run_id before input validation
+        # Because it is used in exception handling
+        run_id = event['RuntimeVariables']['run_id']
         # Set up Environment variables Schema.
-
         schema = EnvironSchema(strict=False)
         config, errors = schema.load(event['RuntimeVariables'])
         if errors:
@@ -105,37 +110,16 @@ def lambda_handler(event, context):
 
         final_output = {"data": stage_5_output.to_json(orient='records')}
 
-    except ValueError as e:
-        error_message = (
-            "Parameter validation error in "
-            + current_module
-            + " |- "
-            + str(e.args)
-            + " | Request ID: "
-            + str(context.aws_request_id)
-        )
-        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
-
     except Exception as e:
-        error_message = (
-            "General Error in "
-            + current_module
-            + " ("
-            + str(type(e))
-            + ") |- "
-            + str(e.args)
-            + " | Request ID: "
-            + str(context.aws_request_id)
-        )
-        log_message = error_message + " | Line: " + str(e.__traceback__.tb_lineno)
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context)
     finally:
         if (len(error_message)) > 0:
-            logger.error(log_message)
+            logger.error(error_message)
             return {"success": False, "error": error_message}
 
     logger.info("Successfully completed module: " + current_module)
     final_output['success'] = True
-
     return final_output
 
 
