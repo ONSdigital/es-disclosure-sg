@@ -238,9 +238,11 @@ def test_disclosure(which_lambda, which_runtime, which_input_file, which_output_
         file_data = file_1.read()
     in_data = pd.DataFrame(json.loads(file_data))
 
+    # Create the prefix/suffix for the column names that need passing in.
     beginning = which_runtime["RuntimeVariables"]["total_columns"][0] + "_"
     ending = "_" + which_runtime["RuntimeVariables"]["total_columns"][0]
 
+    # Each step needs a different collection of pass in variables to run properly.
     if "top1_column" in which_runtime["RuntimeVariables"].keys():
         produced_data = which_lambda.disclosure(
             in_data,
