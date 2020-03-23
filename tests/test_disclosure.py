@@ -146,7 +146,7 @@ def test_incomplete_read_error(mock_s3_get):
 
 
 @pytest.mark.parametrize(
-    "which_lambda,expected_message,assertion,which_environment_variables," +
+    "which_lambda,which_environment_variables,expected_message,assertion," +
     "which_runtime_variables",
     [
         (lambda_method_function_1, method_environment_variables,
