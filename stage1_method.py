@@ -41,7 +41,7 @@ def lambda_handler(event, context):
     try:
         # Set up Environment variables Schema.
         schema = EnvironSchema(strict=False)
-        config, errors = schema.load(event)
+        config, errors = schema.load(event['RuntimeVariables'])
         if errors:
             raise ValueError(f"Error validating environment parameters: {errors}")
 

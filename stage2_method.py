@@ -46,7 +46,7 @@ def lambda_handler(event, context):
         # Set up Environment variables Schema.
 
         schema = EnvironSchema(strict=False)
-        config, errors = schema.load(event)
+        config, errors = schema.load(event['RuntimeVariables'])
         if errors:
             raise ValueError(f"Error validating environment parameters: {errors}")
 
@@ -141,7 +141,7 @@ def disclosure(input_df, disclosivity_marker, publishable_indicator,
     """
     def run_disclosure(row):
         if row[publishable_indicator] != 'Publish':
-            if row[parent_column] < threshold:
+            if row[parent_column] < float(threshold):
                 row[disclosivity_marker] = 'Yes'
                 row[publishable_indicator] = 'No'
                 row[explanation] = 'Stage 2 - Only '\

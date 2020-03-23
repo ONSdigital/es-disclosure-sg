@@ -149,6 +149,7 @@ def lambda_handler(event, context):
 
             # Combines the generic payload and the stage specific payload.
             combined_input = {**payload_array[0], **(payload_array[int(disclosure_step)])}
+            combined_input = {"RuntimeVariables": combined_input}
 
             formatted_data = invoke_method(lambda_name,
                                            combined_input,
