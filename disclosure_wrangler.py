@@ -167,7 +167,8 @@ def lambda_handler(event, context):
                 "publishable_indicator": publishable_indicator,
                 "explanation": explanation,
                 "total_columns": total_columns,
-                "unique_identifier": unique_identifier
+                "unique_identifier": unique_identifier,
+                "run_id": run_id
             }
 
         aws_functions.save_data(bucket_name, out_file_name, formatted_data['data'],
