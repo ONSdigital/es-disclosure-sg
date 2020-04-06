@@ -3,8 +3,8 @@ service: es-disclosure-sg
 provider:
   name: aws
   deploymentBucket:
-    name: spp-results-sandbox-serverless
-  role: arn:aws:iam::${self:custom.accountId}:role/lambda_invoke_lambda
+    name: spp-results-${self:custom.environment}-serverless
+  role: arn:aws:iam::#{AWS::AccountId}:role/lambda_invoke_lambda
   vpc:
     securityGroupIds:
       - ${file(../json_outputs/security_groups_output.json):SecurityGroups.0.GroupId}
@@ -21,7 +21,7 @@ provider:
     lambda: true
 
 custom:
-  accountId: ${env:aws_account_id}
+  environment: ${env:ENVIRONMENT}
 
 functions:
   deploy-disclosure-wrangler:
@@ -34,13 +34,13 @@ functions:
       exclude:
         - ./**
     layers:
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:dev-es-common-functions:latest
     tags:
       app: results
     environment:
       checkpoint: 5
-      bucket_name: spp-results-sandbox
+      bucket_name: spp-results-${self:custom.environment}
       method_name: es-disclosure-stage--method
 
   deploy-stage-1-method:
@@ -53,8 +53,8 @@ functions:
       exclude:
         - ./**
     layers:
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:dev-es-common-functions:latest
     tags:
       app: results
 
@@ -68,8 +68,8 @@ functions:
       exclude:
         - ./**
     layers:
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:dev-es-common-functions:latest
     tags:
       app: results
 
@@ -82,8 +82,8 @@ functions:
       exclude:
         - ./**
     layers:
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:dev-es-common-functions:latest
     tags:
       app: results
 
@@ -97,8 +97,8 @@ functions:
       exclude:
         - ./**
     layers:
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:dev-es-common-functions:latest
     tags:
       app: results
 
@@ -112,10 +112,11 @@ functions:
       exclude:
         - ./**
     layers:
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:es_python_layer:latest
-      - arn:aws:lambda:eu-west-2:${self:custom.accountId}:layer:dev-es-common-functions:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:es_python_layer:latest
+      - arn:aws:lambda:eu-west-2:#{AWS::AccountId}:layer:dev-es-common-functions:latest
     tags:
       app: results
 
 plugins:
   - serverless-latest-layer-version
+  - serverless-pseudo-parameters
