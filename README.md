@@ -59,7 +59,7 @@ Checks whether the total for the cell is 0 or rounded to 0
 
 **Inputs:**
 
-json_data: input data.                                                   <Br>
+data: input data.                                                   <Br>
 disclosivity_marker: The name of the column to put 'disclosive' marker. <Br>
 publishable_indicator: The name of the column to put 'publish' marker.    <Br>
 explanation: The name of the column to put reason for pass/fail.<Br>
@@ -86,7 +86,7 @@ certain threshold.
 
 **Inputs:**
 
-json_data: input data.                                                    <Br>
+data: input data.                                                    <Br>
 disclosivity_marker: The name of the column to put 'disclosive' marker.  <Br>
 publishable_indicator: The name of the column to put 'publish' marker.     <Br>
 explanation: The name of the column to put reason for pass/fail. <Br>
@@ -119,7 +119,7 @@ Not including the specifics of this test as it may be considered sensitive
 
 **Inputs:**
 
-json_data: input data.                                                      
+data: input data.                                                      
 disclosivity_marker: The name of the column to put 'disclosive' marker.    <Br>
 publishable_indicator: The name of the column to put 'publish' marker.      <Br> 
 explanation: The name of the column to put reason for pass/fail.   <Br>

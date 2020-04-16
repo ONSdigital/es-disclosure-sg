@@ -3,7 +3,7 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from es_aws_functions import test_generic_library
+from es_aws_functions import exception_classes, test_generic_library
 from moto import mock_s3
 from pandas.util.testing import assert_frame_equal
 
@@ -25,7 +25,7 @@ method_runtime_variables_1 = {
         "cell_total_column": "cell_total",
         "disclosivity_marker": "disclosive",
         "explanation": "reason",
-        "json_data": None,
+        "data": None,
         "publishable_indicator": "publish",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
         "unique_identifier": ["responder_id"],
@@ -37,7 +37,7 @@ method_runtime_variables_2 = {
     "RuntimeVariables": {
         "disclosivity_marker": "disclosive",
         "explanation": "reason",
-        "json_data": None,
+        "data": None,
         "parent_column": "ent_ref_count",
         "publishable_indicator": "publish",
         "threshold": "7",
@@ -52,7 +52,7 @@ method_runtime_variables_5 = {
         "cell_total_column": "cell_total",
         "disclosivity_marker": "disclosive",
         "explanation": "reason",
-        "json_data": None,
+        "data": None,
         "publishable_indicator": "publish",
         "threshold": "1",
         "top1_column": "largest_contributor",
@@ -78,13 +78,13 @@ wrangler_runtime_variables = {
             "parent_column": "ent_ref_count",
             "publishable_indicator": "publish",
             "queue_url": "test_url",
-            "run_id": "bob",
+            "run_id": "666",
             "sns_topic_arn": "fake_sns_arn",
             "stage5_threshold": "0.1",
             "threshold": "3",
             "top1_column": "largest_contributor",
             "top2_column": "second_largest_contributor",
-            "total_columns": ["Q608_total"],
+            "total_columns": ["Q608_total", "Q606_other_gravel"],
             "unique_identifier": ["responder_id"]
         }
 }
@@ -174,7 +174,7 @@ def test_key_error(which_lambda, which_environment_variables, expected_message,
         prepared_data = pd.DataFrame(json.loads(file_data))
         print(prepared_data)
         which_runtime_variables[
-            'RuntimeVariables']['json_data'] = prepared_data.to_json(orient="records")
+            'RuntimeVariables']['data'] = prepared_data.to_json(orient="records")
         test_generic_library.key_error(which_lambda,
                                        which_environment_variables,
                                        expected_message, assertion,
@@ -308,7 +308,7 @@ def test_method_success(which_lambda, which_runtime, which_input_file, which_out
         file_data = file_1.read()
     in_data = pd.DataFrame(json.loads(file_data))
 
-    which_runtime["RuntimeVariables"]["json_data"] = in_data.to_json(orient="records")
+    which_runtime["RuntimeVariables"]["data"] = in_data.to_json(orient="records")
 
     output = which_lambda.lambda_handler(
         which_runtime, test_generic_library.context_object)
@@ -326,9 +326,64 @@ def test_method_success(which_lambda, which_runtime, which_input_file, which_out
 @mock_s3
 @mock.patch('disclosure_wrangler.aws_functions.get_dataframe',
             side_effect=test_generic_library.replacement_get_dataframe)
+def test_wrangler_success_passed(mock_s3_get):
+    """
+    Runs the wrangler function.
+    :param mock_s3_get - Replacement Function For The Data Retrieval AWS Functionality.
+    :return Test Pass/Fail
+    """
+    bucket_name = wrangler_environment_variables["bucket_name"]
+    client = test_generic_library.create_bucket(bucket_name)
+
+    file_list = ["test_wrangler_input.json"]
+
+    test_generic_library.upload_files(client, bucket_name, file_list)
+
+    with mock.patch.dict(lambda_wrangler_function.os.environ,
+                         wrangler_environment_variables):
+        with mock.patch("disclosure_wrangler.boto3.client") as mock_client:
+            mock_client_object = mock.Mock()
+            mock_client.return_value = mock_client_object
+
+            # Rather than mock the get/decode we tell the code that when the invoke is
+            # called pass the variables to this replacement function instead.
+            mock_client_object.invoke.side_effect = \
+                test_generic_library.replacement_invoke
+
+            # This stops the Error caused by the replacement function from stopping
+            # the test.
+            with pytest.raises(exception_classes.LambdaFailure):
+                lambda_wrangler_function.lambda_handler(
+                    wrangler_runtime_variables, test_generic_library.context_object
+                )
+
+        with open("tests/fixtures/test_method_input.json", "r") as file_1:
+            test_data_prepared = file_1.read()
+        prepared_data = pd.DataFrame(json.loads(test_data_prepared), dtype=float)
+
+        with open("tests/fixtures/test_wrangler_to_method_input.json", "r") as file_2:
+            test_data_produced = file_2.read()
+        produced_data = pd.DataFrame(json.loads(test_data_produced), dtype=float)
+
+        # Compares the data.
+        assert_frame_equal(produced_data, prepared_data)
+
+        with open("tests/fixtures/test_wrangler_to_method_runtime.json",
+                  "r") as file_3:
+            test_dict_prepared = file_3.read()
+        produced_dict = json.loads(test_dict_prepared)
+
+        # Ensures data is not in the RuntimeVariables and then compares.
+        method_runtime_variables_1["RuntimeVariables"]["data"] = None
+        assert produced_dict == method_runtime_variables_1["RuntimeVariables"]
+
+
+@mock_s3
+@mock.patch('disclosure_wrangler.aws_functions.get_dataframe',
+            side_effect=test_generic_library.replacement_get_dataframe)
 @mock.patch('disclosure_wrangler.aws_functions.save_data',
             side_effect=test_generic_library.replacement_save_data)
-def test_wrangler_success(mock_s3_get, mock_s3_put):
+def test_wrangler_success_returned(mock_s3_get, mock_s3_put):
     """
     Runs the wrangler function.
     :param mock_s3_get - Replacement Function For The Data Retrieval AWS Functionality.
