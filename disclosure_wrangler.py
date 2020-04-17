@@ -105,7 +105,7 @@ def lambda_handler(event, context):
         disclosure_stages_list.sort()
 
         generic_json_payload = {
-            "json_data": formatted_data,
+            "data": formatted_data,
             "disclosivity_marker": disclosivity_marker,
             "publishable_indicator": publishable_indicator,
             "explanation": explanation,
@@ -162,7 +162,7 @@ def lambda_handler(event, context):
             # Located here as after the first loop it requires formatted data to be
             # referenced with 'data' and the JSON needs to be reset to use the right data.
             generic_json_payload = {
-                "json_data": formatted_data['data'],
+                "data": formatted_data['data'],
                 "disclosivity_marker": disclosivity_marker,
                 "publishable_indicator": publishable_indicator,
                 "explanation": explanation,

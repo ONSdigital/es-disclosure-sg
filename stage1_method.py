@@ -15,7 +15,7 @@ class EnvironSchema(marshmallow.Schema):
     explanation = marshmallow.fields.Str(required=True)
     total_columns = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
     cell_total_column = marshmallow.fields.Str(required=True)
-    json_data = marshmallow.fields.Str(required=True)
+    data = marshmallow.fields.Str(required=True)
     unique_identifier = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
     run_id = marshmallow.fields.Str(required=True)
 
@@ -24,7 +24,7 @@ def lambda_handler(event, context):
     """
     Main entry point into method
     :param event: json payload containing:
-            json_data: input data.
+            data: input data.
             disclosivity_marker: The name of the column to put 'disclosive' marker.
             publishable_indicator: The name of the column to put 'publish' marker.
             explanation: The name of the column to put reason for pass/fail.
@@ -60,7 +60,7 @@ def lambda_handler(event, context):
         total_columns = config['total_columns']
         cell_total_column = config['cell_total_column']
 
-        input_json = json.loads(config['json_data'])
+        input_json = json.loads(config['data'])
 
         input_dataframe = pd.DataFrame(input_json)
         stage_1_output = pd.DataFrame()
