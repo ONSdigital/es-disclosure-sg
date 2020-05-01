@@ -8,13 +8,32 @@ from es_aws_functions import aws_functions, exception_classes, general_functions
 from marshmallow import Schema, fields
 
 
-class EnvironSchema(Schema):
-    """
-    Class to set up the environment variables schema.
-    """
+class EnvironmentSchema(Schema):
     checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
     method_name = fields.Str(required=True)
+
+
+class RuntimeSchema(Schema):
+    cell_total_column = fields.Str(required=True)
+    disclosivity_marker = fields.Str(required=True)
+    disclosure_stages = fields.Str(required=True)
+    explanation = fields.Str(required=True)
+    in_file_name = fields.Str(required=True)
+    incoming_message_group_id = fields.Str(required=True)
+    location = fields.Str(required=True)
+    out_file_name = fields.Str(required=True)
+    outgoing_message_group_id = fields.Str(required=True)
+    parent_column = fields.Str(required=True)
+    publishable_indicator = fields.Str(required=True)
+    sns_topic_arn = fields.Str(required=True)
+    queue_url = fields.Str(required=True)
+    stage5_threshold = fields.Str(required=True)
+    threshold = fields.Str(required=True)
+    top1_column = fields.Str(required=True)
+    top2_column = fields.Str(required=True)
+    total_columns = fields.List(fields.String, required=True)
+    unique_identifier = fields.List(fields.String, required=True)
 
 
 def lambda_handler(event, context):
@@ -24,7 +43,7 @@ def lambda_handler(event, context):
     :param event: JSON payload containing:
     RuntimeVariables:{
         cell_total_column: The name of the column holding the cell total.
-        disclosivity_marker: The name of the column to put 'disclosive' marker.
+        disclosivity_marker: The name of the column to put "disclosive" marker.
         disclosure_stages: The stages of disclosure you wish to run e.g. (1 2 5)
         explanation: The name of the column to put reason for pass/fail.
         in_file_name: Input file specified.
@@ -32,7 +51,7 @@ def lambda_handler(event, context):
         out_file_name: Output file specified.
         outgoing_message_group_id: Output ID specified.
         parent_column: The name of the column holding the count of parent company.
-        publishable_indicator: The name of the column to put 'publish' marker.
+        publishable_indicator: The name of the column to put "publish" marker.
         sqs_queue_url: The URL of the sqs queue used for the run.
         stage5_threshold: The threshold used in the disclosure calculation.
         threshold: The threshold used in the disclosure steps.
@@ -55,39 +74,45 @@ def lambda_handler(event, context):
     try:
         # Retrieve run_id before input validation
         # Because it is used in exception handling
-        run_id = event['RuntimeVariables']['run_id']
+        run_id = event["RuntimeVariables"]["run_id"]
 
-        schema = EnvironSchema(strict=False)
-        config, errors = schema.load(os.environ)
+        environment_variables, errors = EnvironmentSchema().load(os.environ)
         if errors:
-            raise ValueError(f"Error validating environment parameters: {errors}")
-        logger.info("Validated params")
+            logger.error(f"Error validating environment params: {errors}")
+            raise ValueError(f"Error validating environment params: {errors}")
+
+        runtime_variables, errors = RuntimeSchema().load(event["RuntimeVariables"])
+        if errors:
+            logger.error(f"Error validating runtime params: {errors}")
+            raise ValueError(f"Error validating runtime params: {errors}")
+
+        logger.info("Validated parameters.")
 
         # Environment Variables
-        checkpoint = config['checkpoint']
-        bucket_name = config['bucket_name']
-        method_name = config["method_name"]
+        checkpoint = environment_variables["checkpoint"]
+        bucket_name = environment_variables["bucket_name"]
+        method_name = environment_variables["method_name"]
 
         # Runtime Variables
-        cell_total_column = event['RuntimeVariables']["cell_total_column"]
-        disclosivity_marker = event['RuntimeVariables']["disclosivity_marker"]
-        disclosure_stages = event['RuntimeVariables']["disclosure_stages"]
-        explanation = event['RuntimeVariables']["explanation"]
-        in_file_name = event['RuntimeVariables']['in_file_name']
-        incoming_message_group_id = event['RuntimeVariables']['incoming_message_group_id']
-        location = event['RuntimeVariables']['location']
-        out_file_name = event['RuntimeVariables']['out_file_name']
-        outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
-        parent_column = event['RuntimeVariables']["parent_column"]
-        publishable_indicator = event['RuntimeVariables']["publishable_indicator"]
-        sns_topic_arn = event['RuntimeVariables']["sns_topic_arn"]
-        sqs_queue_url = event['RuntimeVariables']["queue_url"]
-        stage5_threshold = event['RuntimeVariables']["stage5_threshold"]
-        threshold = event['RuntimeVariables']["threshold"]
-        top1_column = event['RuntimeVariables']["top1_column"]
-        top2_column = event['RuntimeVariables']["top2_column"]
-        total_columns = event['RuntimeVariables']["total_columns"]
-        unique_identifier = event['RuntimeVariables']["unique_identifier"]
+        cell_total_column = runtime_variables["cell_total_column"]
+        disclosivity_marker = runtime_variables["disclosivity_marker"]
+        disclosure_stages = runtime_variables["disclosure_stages"]
+        explanation = runtime_variables["explanation"]
+        in_file_name = runtime_variables["in_file_name"]
+        incoming_message_group_id = runtime_variables["incoming_message_group_id"]
+        location = runtime_variables["location"]
+        out_file_name = runtime_variables["out_file_name"]
+        outgoing_message_group_id = runtime_variables["outgoing_message_group_id"]
+        parent_column = runtime_variables["parent_column"]
+        publishable_indicator = runtime_variables["publishable_indicator"]
+        sns_topic_arn = runtime_variables["sns_topic_arn"]
+        sqs_queue_url = runtime_variables["queue_url"]
+        stage5_threshold = runtime_variables["stage5_threshold"]
+        threshold = runtime_variables["threshold"]
+        top1_column = runtime_variables["top1_column"]
+        top2_column = runtime_variables["top2_column"]
+        total_columns = runtime_variables["total_columns"]
+        unique_identifier = runtime_variables["unique_identifier"]
 
         # Set up clients
         sqs = boto3.client("sqs", "eu-west-2")
@@ -143,7 +168,7 @@ def lambda_handler(event, context):
 
             # Find the specific location where the stage number need to be inserted and
             # constructs the relevant method name using the disclosure stage number.
-            index = method_name.find('-method')
+            index = method_name.find("-method")
             lambda_name = method_name[:index] + disclosure_step + method_name[index:]
 
             # Combines the generic payload and the stage specific payload.
@@ -154,15 +179,15 @@ def lambda_handler(event, context):
                                            combined_input,
                                            lambda_client)
 
-            if not formatted_data['success']:
-                raise exception_classes.MethodFailure(formatted_data['error'])
+            if not formatted_data["success"]:
+                raise exception_classes.MethodFailure(formatted_data["error"])
 
             logger.info("Successfully invoked stage " + disclosure_step + " lambda")
 
             # Located here as after the first loop it requires formatted data to be
-            # referenced with 'data' and the JSON needs to be reset to use the right data.
+            # referenced with "data" and the JSON needs to be reset to use the right data.
             generic_json_payload = {
-                "data": formatted_data['data'],
+                "data": formatted_data["data"],
                 "disclosivity_marker": disclosivity_marker,
                 "publishable_indicator": publishable_indicator,
                 "explanation": explanation,
@@ -171,12 +196,12 @@ def lambda_handler(event, context):
                 "run_id": run_id
             }
 
-        aws_functions.save_data(bucket_name, out_file_name, formatted_data['data'],
+        aws_functions.save_data(bucket_name, out_file_name, formatted_data["data"],
                                 sqs_queue_url, outgoing_message_group_id, location)
 
         logger.info("Successfully sent data to s3")
 
-        output_data = formatted_data['data']
+        output_data = formatted_data["data"]
 
         aws_functions.save_dataframe_to_csv(pd.read_json(output_data, dtype=False),
                                             bucket_name, out_file_name, location)
