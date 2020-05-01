@@ -43,7 +43,7 @@ def lambda_handler(event, context):
     :param event: JSON payload containing:
     RuntimeVariables:{
         cell_total_column: The name of the column holding the cell total.
-        disclosivity_marker: The name of the column to put 'disclosive' marker.
+        disclosivity_marker: The name of the column to put "disclosive" marker.
         disclosure_stages: The stages of disclosure you wish to run e.g. (1 2 5)
         explanation: The name of the column to put reason for pass/fail.
         in_file_name: Input file specified.
@@ -51,7 +51,7 @@ def lambda_handler(event, context):
         out_file_name: Output file specified.
         outgoing_message_group_id: Output ID specified.
         parent_column: The name of the column holding the count of parent company.
-        publishable_indicator: The name of the column to put 'publish' marker.
+        publishable_indicator: The name of the column to put "publish" marker.
         sqs_queue_url: The URL of the sqs queue used for the run.
         stage5_threshold: The threshold used in the disclosure calculation.
         threshold: The threshold used in the disclosure steps.
@@ -74,7 +74,7 @@ def lambda_handler(event, context):
     try:
         # Retrieve run_id before input validation
         # Because it is used in exception handling
-        run_id = event['RuntimeVariables']['run_id']
+        run_id = event["RuntimeVariables"]["run_id"]
 
         environment_variables, errors = EnvironmentSchema().load(os.environ)
         if errors:
@@ -89,8 +89,8 @@ def lambda_handler(event, context):
         logger.info("Validated parameters.")
 
         # Environment Variables
-        checkpoint = environment_variables['checkpoint']
-        bucket_name = environment_variables['bucket_name']
+        checkpoint = environment_variables["checkpoint"]
+        bucket_name = environment_variables["bucket_name"]
         method_name = environment_variables["method_name"]
 
         # Runtime Variables
@@ -98,10 +98,10 @@ def lambda_handler(event, context):
         disclosivity_marker = runtime_variables["disclosivity_marker"]
         disclosure_stages = runtime_variables["disclosure_stages"]
         explanation = runtime_variables["explanation"]
-        in_file_name = runtime_variables['in_file_name']
-        incoming_message_group_id = runtime_variables['incoming_message_group_id']
-        location = runtime_variables['location']
-        out_file_name = runtime_variables['out_file_name']
+        in_file_name = runtime_variables["in_file_name"]
+        incoming_message_group_id = runtime_variables["incoming_message_group_id"]
+        location = runtime_variables["location"]
+        out_file_name = runtime_variables["out_file_name"]
         outgoing_message_group_id = runtime_variables["outgoing_message_group_id"]
         parent_column = runtime_variables["parent_column"]
         publishable_indicator = runtime_variables["publishable_indicator"]
@@ -168,7 +168,7 @@ def lambda_handler(event, context):
 
             # Find the specific location where the stage number need to be inserted and
             # constructs the relevant method name using the disclosure stage number.
-            index = method_name.find('-method')
+            index = method_name.find("-method")
             lambda_name = method_name[:index] + disclosure_step + method_name[index:]
 
             # Combines the generic payload and the stage specific payload.
@@ -179,15 +179,15 @@ def lambda_handler(event, context):
                                            combined_input,
                                            lambda_client)
 
-            if not formatted_data['success']:
-                raise exception_classes.MethodFailure(formatted_data['error'])
+            if not formatted_data["success"]:
+                raise exception_classes.MethodFailure(formatted_data["error"])
 
             logger.info("Successfully invoked stage " + disclosure_step + " lambda")
 
             # Located here as after the first loop it requires formatted data to be
-            # referenced with 'data' and the JSON needs to be reset to use the right data.
+            # referenced with "data" and the JSON needs to be reset to use the right data.
             generic_json_payload = {
-                "data": formatted_data['data'],
+                "data": formatted_data["data"],
                 "disclosivity_marker": disclosivity_marker,
                 "publishable_indicator": publishable_indicator,
                 "explanation": explanation,
@@ -196,12 +196,12 @@ def lambda_handler(event, context):
                 "run_id": run_id
             }
 
-        aws_functions.save_data(bucket_name, out_file_name, formatted_data['data'],
+        aws_functions.save_data(bucket_name, out_file_name, formatted_data["data"],
                                 sqs_queue_url, outgoing_message_group_id, location)
 
         logger.info("Successfully sent data to s3")
 
-        output_data = formatted_data['data']
+        output_data = formatted_data["data"]
 
         aws_functions.save_dataframe_to_csv(pd.read_json(output_data, dtype=False),
                                             bucket_name, out_file_name, location)

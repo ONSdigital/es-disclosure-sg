@@ -28,8 +28,8 @@ def lambda_handler(event, context):
     Main entry point into method
     :param event: json payload containing:
             data: input data.
-            disclosivity_marker: The name of the column to put 'disclosive' marker.
-            publishable_indicator: The name of the column to put 'publish' marker.
+            disclosivity_marker: The name of the column to put "disclosive" marker.
+            publishable_indicator: The name of the column to put "publish" marker.
             explanation: The name of the column to put reason for pass/fail.
             total_column: The name of the column holding the cell total.
             top1_column: The name of the column largest contributor to the cell.
@@ -44,7 +44,7 @@ def lambda_handler(event, context):
             {"success": False, "error": <error message - string>}
     """
     current_module = "Disclosure Stage 5 Method"
-    error_message = ''
+    error_message = ""
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     # Define run_id outside of try block
@@ -52,26 +52,26 @@ def lambda_handler(event, context):
     try:
         # Retrieve run_id before input validation
         # Because it is used in exception handling
-        run_id = event['RuntimeVariables']['run_id']
+        run_id = event["RuntimeVariables"]["run_id"]
         # Set up Environment variables Schema.
         schema = EnvironmentSchema(strict=False)
-        config, errors = schema.load(event['RuntimeVariables'])
+        config, errors = schema.load(event["RuntimeVariables"])
         if errors:
             raise ValueError(f"Error validating environment parameters: {errors}")
 
         logger.info("Validated params")
 
-        disclosivity_marker = config['disclosivity_marker']
-        publishable_indicator = config['publishable_indicator']
-        explanation = config['explanation']
-        top1_column = config['top1_column']
-        top2_column = config['top2_column']
-        cell_total_column = config['cell_total_column']
-        threshold = config['threshold']
-        total_columns = config['total_columns']
-        unique_identifier = config['unique_identifier']
+        disclosivity_marker = config["disclosivity_marker"]
+        publishable_indicator = config["publishable_indicator"]
+        explanation = config["explanation"]
+        top1_column = config["top1_column"]
+        top2_column = config["top2_column"]
+        cell_total_column = config["cell_total_column"]
+        threshold = config["threshold"]
+        total_columns = config["total_columns"]
+        unique_identifier = config["unique_identifier"]
 
-        input_json = json.loads(config['data'])
+        input_json = json.loads(config["data"])
 
         input_dataframe = pd.DataFrame(input_json)
         stage_5_output = pd.DataFrame()
@@ -108,7 +108,7 @@ def lambda_handler(event, context):
 
         logger.info("Successfully completed Disclosure")
 
-        final_output = {"data": stage_5_output.to_json(orient='records')}
+        final_output = {"data": stage_5_output.to_json(orient="records")}
 
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
@@ -119,7 +119,7 @@ def lambda_handler(event, context):
             return {"success": False, "error": error_message}
 
     logger.info("Successfully completed module: " + current_module)
-    final_output['success'] = True
+    final_output["success"] = True
     return final_output
 
 
@@ -128,8 +128,8 @@ def disclosure(input_df, disclosivity_marker, publishable_indicator,
     """
     Takes in a dataframe and applies the stage5 disclosure rule.
     :param input_df: input data.
-    :param disclosivity_marker: The name of the column to put 'disclosive' marker.
-    :param publishable_indicator: The name of the column to put 'publish' marker.
+    :param disclosivity_marker: The name of the column to put "disclosive" marker.
+    :param publishable_indicator: The name of the column to put "publish" marker.
     :param explanation: The name of the column to put reason for pass/fail.
     :param cell_total_column: The name of the column holding the cell total.
     :param top1_column: The name of the column largest contributor to the cell.
@@ -138,20 +138,20 @@ def disclosure(input_df, disclosivity_marker, publishable_indicator,
     :return output_df: Input dataframe with the addition of stage5 disclosure info.
     """
     def run_disclosure(row):
-        if row[publishable_indicator] not in ('Publish', 'No'):
-            row['Score'] = \
+        if row[publishable_indicator] not in ("Publish", "No"):
+            row["Score"] = \
                 (row[cell_total_column] - row[top1_column] - row[top2_column]) \
                 / row[top1_column]
-            if row['Score'] >= float(threshold):
-                row[disclosivity_marker] = 'No'
-                row[publishable_indicator] = 'Publish'
-                row[explanation] = "Stage 5 - Score is " + str(row['Score'])\
+            if row["Score"] >= float(threshold):
+                row[disclosivity_marker] = "No"
+                row[publishable_indicator] = "Publish"
+                row[explanation] = "Stage 5 - Score is " + str(row["Score"])\
                                    + ". This meets threshold of (>=" + threshold\
                                    + ")"
             else:
-                row[disclosivity_marker] = 'Yes'
-                row[publishable_indicator] = 'No'
-                row[explanation] = "Stage 5 - Score is " + str(row['Score'])\
+                row[disclosivity_marker] = "Yes"
+                row[publishable_indicator] = "No"
+                row[explanation] = "Stage 5 - Score is " + str(row["Score"])\
                                    + ". This doesnt meet threshold of (>=" + threshold\
                                    + ")"
         return row

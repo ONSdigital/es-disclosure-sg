@@ -26,8 +26,8 @@ def lambda_handler(event, context):
     Main entry point into method
     :param event: json payload containing:
             data: input data.
-            disclosivity_marker: The name of the column to put 'disclosive' marker.
-            publishable_indicator: The name of the column to put 'publish' marker.
+            disclosivity_marker: The name of the column to put "disclosive" marker.
+            publishable_indicator: The name of the column to put "publish" marker.
             explanation: The name of the column to put reason for pass/fail.
             parent_column: The name of the column holding the count of parent company.
             threshold: The threshold above which a row is not disclosive.
@@ -40,7 +40,7 @@ def lambda_handler(event, context):
             {"success": False, "error": <error message - string>}
     """
     current_module = "Disclosure Stage 2 Method"
-    error_message = ''
+    error_message = ""
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     # Define run_id outside of try block
@@ -48,25 +48,25 @@ def lambda_handler(event, context):
     try:
         # Retrieve run_id before input validation
         # Because it is used in exception handling
-        run_id = event['RuntimeVariables']['run_id']
+        run_id = event["RuntimeVariables"]["run_id"]
         # Set up Environment variables Schema.
 
         schema = EnvironmentSchema(strict=False)
-        config, errors = schema.load(event['RuntimeVariables'])
+        config, errors = schema.load(event["RuntimeVariables"])
         if errors:
             raise ValueError(f"Error validating environment parameters: {errors}")
 
         logger.info("Validated params")
 
-        disclosivity_marker = config['disclosivity_marker']
-        publishable_indicator = config['publishable_indicator']
-        explanation = config['explanation']
-        parent_column = config['parent_column']
-        threshold = int(config['threshold'])
-        total_columns = config['total_columns']
-        unique_identifier = config['unique_identifier']
+        disclosivity_marker = config["disclosivity_marker"]
+        publishable_indicator = config["publishable_indicator"]
+        explanation = config["explanation"]
+        parent_column = config["parent_column"]
+        threshold = int(config["threshold"])
+        total_columns = config["total_columns"]
+        unique_identifier = config["unique_identifier"]
 
-        input_json = json.loads(config['data'])
+        input_json = json.loads(config["data"])
 
         input_dataframe = pd.DataFrame(input_json)
         stage_2_output = pd.DataFrame()
@@ -99,7 +99,7 @@ def lambda_handler(event, context):
                         + str(total_column))
 
         logger.info("Successfully completed Disclosure")
-        final_output = {"data": stage_2_output.to_json(orient='records')}
+        final_output = {"data": stage_2_output.to_json(orient="records")}
 
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
@@ -110,7 +110,7 @@ def lambda_handler(event, context):
             return {"success": False, "error": error_message}
 
     logger.info("Successfully completed module: " + current_module)
-    final_output['success'] = True
+    final_output["success"] = True
     return final_output
 
 
@@ -119,25 +119,25 @@ def disclosure(input_df, disclosivity_marker, publishable_indicator,
     """
     Takes in a dataframe and applies the stage2 disclosure rule.
     :param input_df: input data.
-    :param disclosivity_marker: The name of the column to put 'disclosive' marker.
-    :param publishable_indicator: The name of the column to put 'publish' marker.
+    :param disclosivity_marker: The name of the column to put "disclosive" marker.
+    :param publishable_indicator: The name of the column to put "publish" marker.
     :param explanation: The name of the column to put reason for pass/fail.
     :param parent_column: The name of the column holding the count of parent company.
     :param threshold: The threshold above which a row is not disclosive.
     :return output_df: Input dataframe with the addition of stage2 disclosure info.
     """
     def run_disclosure(row):
-        if row[publishable_indicator] != 'Publish':
+        if row[publishable_indicator] != "Publish":
             if row[parent_column] < float(threshold):
-                row[disclosivity_marker] = 'Yes'
-                row[publishable_indicator] = 'No'
-                row[explanation] = 'Stage 2 - Only '\
+                row[disclosivity_marker] = "Yes"
+                row[publishable_indicator] = "No"
+                row[explanation] = "Stage 2 - Only "\
                                    + str(row[parent_column])\
                                    + " parent references in cell"
             else:
-                row[disclosivity_marker] = 'No'
-                row[publishable_indicator] = 'Not Applicable'
-                row[explanation] = 'Passed Stage 2'
+                row[disclosivity_marker] = "No"
+                row[publishable_indicator] = "Not Applicable"
+                row[explanation] = "Passed Stage 2"
         return row
 
     output_df = input_df.apply(run_disclosure, axis=1)
