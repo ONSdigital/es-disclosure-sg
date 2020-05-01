@@ -6,7 +6,7 @@ import pandas as pd
 from es_aws_functions import general_functions
 
 
-class EnvironmentSchema(marshmallow.Schema):
+class RuntimeSchema(marshmallow.Schema):
     """
     Class to set up the environment variables schema.
     """
@@ -45,22 +45,23 @@ def lambda_handler(event, context):
         # Retrieve run_id before input validation
         # Because it is used in exception handling
         run_id = event["RuntimeVariables"]["run_id"]
-        # Set up Environment variables Schema.
-        schema = EnvironmentSchema(strict=False)
-        config, errors = schema.load(event["RuntimeVariables"])
+
+        runtime_variables, errors = RuntimeSchema().load(event["RuntimeVariables"])
         if errors:
-            raise ValueError(f"Error validating environment parameters: {errors}")
+            logger.error(f"Error validating runtime params: {errors}")
+            raise ValueError(f"Error validating runtime params: {errors}")
 
-        logger.info("Validated params")
+        logger.info("Validated parameters.")
 
-        disclosivity_marker = config["disclosivity_marker"]
-        publishable_indicator = config["publishable_indicator"]
-        explanation = config["explanation"]
-        unique_identifier = config["unique_identifier"]
-        total_columns = config["total_columns"]
-        cell_total_column = config["cell_total_column"]
+        # Runtime Variables
+        disclosivity_marker = runtime_variables["disclosivity_marker"]
+        publishable_indicator = runtime_variables["publishable_indicator"]
+        explanation = runtime_variables["explanation"]
+        unique_identifier = runtime_variables["unique_identifier"]
+        total_columns = runtime_variables["total_columns"]
+        cell_total_column = runtime_variables["cell_total_column"]
 
-        input_json = json.loads(config["data"])
+        input_json = json.loads(runtime_variables["data"])
 
         input_dataframe = pd.DataFrame(input_json)
         stage_1_output = pd.DataFrame()
