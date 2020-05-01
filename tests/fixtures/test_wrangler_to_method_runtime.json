@@ -1,1 +1,15 @@
-{"data": null, "disclosivity_marker": "disclosive", "publishable_indicator": "publish", "explanation": "reason", "total_columns": ["Q608_total", "Q606_other_gravel"], "unique_identifier": ["responder_id"], "run_id": "666", "cell_total_column": "cell_total"}
+{
+    "data": null,
+    "disclosivity_marker": "disclosive",
+    "publishable_indicator": "publish",
+    "explanation": "reason",
+    "total_columns": [
+        "Q608_total",
+        "Q606_other_gravel"
+    ],
+    "unique_identifier": [
+        "responder_id"
+    ],
+    "run_id": "666",
+    "cell_total_column": "cell_total"
+}
