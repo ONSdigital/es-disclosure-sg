@@ -6,7 +6,7 @@ import pandas as pd
 from es_aws_functions import general_functions
 
 
-class EnvironSchema(marshmallow.Schema):
+class EnvironmentSchema(marshmallow.Schema):
     """
     Class to set up the environment variables schema.
     """
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
         # Because it is used in exception handling
         run_id = event['RuntimeVariables']['run_id']
         # Set up Environment variables Schema.
-        schema = EnvironSchema(strict=False)
+        schema = EnvironmentSchema(strict=False)
         config, errors = schema.load(event['RuntimeVariables'])
         if errors:
             raise ValueError(f"Error validating environment parameters: {errors}")

@@ -8,13 +8,32 @@ from es_aws_functions import aws_functions, exception_classes, general_functions
 from marshmallow import Schema, fields
 
 
-class EnvironSchema(Schema):
-    """
-    Class to set up the environment variables schema.
-    """
+class EnvironmentSchema(Schema):
     checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
     method_name = fields.Str(required=True)
+
+
+class RuntimeSchema(Schema):
+    cell_total_column = fields.Str(required=True)
+    disclosivity_marker = fields.Str(required=True)
+    disclosure_stages = fields.Str(required=True)
+    explanation = fields.Str(required=True)
+    in_file_name = fields.Str(required=True)
+    incoming_message_group_id = fields.Str(required=True)
+    location = fields.Str(required=True)
+    out_file_name = fields.Str(required=True)
+    outgoing_message_group_id = fields.Str(required=True)
+    parent_column = fields.Str(required=True)
+    publishable_indicator = fields.Str(required=True)
+    sns_topic_arn = fields.Str(required=True)
+    queue_url = fields.Str(required=True)
+    stage5_threshold = fields.Str(required=True)
+    threshold = fields.Str(required=True)
+    top1_column = fields.Str(required=True)
+    top2_column = fields.Str(required=True)
+    total_columns = fields.List(fields.String, required=True)
+    unique_identifier = fields.List(fields.String, required=True)
 
 
 def lambda_handler(event, context):
@@ -57,37 +76,43 @@ def lambda_handler(event, context):
         # Because it is used in exception handling
         run_id = event['RuntimeVariables']['run_id']
 
-        schema = EnvironSchema(strict=False)
-        config, errors = schema.load(os.environ)
+        environment_variables, errors = EnvironmentSchema().load(os.environ)
         if errors:
-            raise ValueError(f"Error validating environment parameters: {errors}")
-        logger.info("Validated params")
+            logger.error(f"Error validating environment params: {errors}")
+            raise ValueError(f"Error validating environment params: {errors}")
+
+        runtime_variables, errors = RuntimeSchema().load(event["RuntimeVariables"])
+        if errors:
+            logger.error(f"Error validating runtime params: {errors}")
+            raise ValueError(f"Error validating runtime params: {errors}")
+
+        logger.info("Validated parameters.")
 
         # Environment Variables
-        checkpoint = config['checkpoint']
-        bucket_name = config['bucket_name']
-        method_name = config["method_name"]
+        checkpoint = environment_variables['checkpoint']
+        bucket_name = environment_variables['bucket_name']
+        method_name = environment_variables["method_name"]
 
         # Runtime Variables
-        cell_total_column = event['RuntimeVariables']["cell_total_column"]
-        disclosivity_marker = event['RuntimeVariables']["disclosivity_marker"]
-        disclosure_stages = event['RuntimeVariables']["disclosure_stages"]
-        explanation = event['RuntimeVariables']["explanation"]
-        in_file_name = event['RuntimeVariables']['in_file_name']
-        incoming_message_group_id = event['RuntimeVariables']['incoming_message_group_id']
-        location = event['RuntimeVariables']['location']
-        out_file_name = event['RuntimeVariables']['out_file_name']
-        outgoing_message_group_id = event['RuntimeVariables']["outgoing_message_group_id"]
-        parent_column = event['RuntimeVariables']["parent_column"]
-        publishable_indicator = event['RuntimeVariables']["publishable_indicator"]
-        sns_topic_arn = event['RuntimeVariables']["sns_topic_arn"]
-        sqs_queue_url = event['RuntimeVariables']["queue_url"]
-        stage5_threshold = event['RuntimeVariables']["stage5_threshold"]
-        threshold = event['RuntimeVariables']["threshold"]
-        top1_column = event['RuntimeVariables']["top1_column"]
-        top2_column = event['RuntimeVariables']["top2_column"]
-        total_columns = event['RuntimeVariables']["total_columns"]
-        unique_identifier = event['RuntimeVariables']["unique_identifier"]
+        cell_total_column = runtime_variables["cell_total_column"]
+        disclosivity_marker = runtime_variables["disclosivity_marker"]
+        disclosure_stages = runtime_variables["disclosure_stages"]
+        explanation = runtime_variables["explanation"]
+        in_file_name = runtime_variables['in_file_name']
+        incoming_message_group_id = runtime_variables['incoming_message_group_id']
+        location = runtime_variables['location']
+        out_file_name = runtime_variables['out_file_name']
+        outgoing_message_group_id = runtime_variables["outgoing_message_group_id"]
+        parent_column = runtime_variables["parent_column"]
+        publishable_indicator = runtime_variables["publishable_indicator"]
+        sns_topic_arn = runtime_variables["sns_topic_arn"]
+        sqs_queue_url = runtime_variables["queue_url"]
+        stage5_threshold = runtime_variables["stage5_threshold"]
+        threshold = runtime_variables["threshold"]
+        top1_column = runtime_variables["top1_column"]
+        top2_column = runtime_variables["top2_column"]
+        total_columns = runtime_variables["total_columns"]
+        unique_identifier = runtime_variables["unique_identifier"]
 
         # Set up clients
         sqs = boto3.client("sqs", "eu-west-2")
