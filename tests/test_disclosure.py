@@ -70,6 +70,7 @@ wrangler_runtime_variables = {
             "disclosivity_marker": "disclosive",
             "disclosure_stages": "1 2 5",
             "explanation": "reason",
+            "final_output_location": "fixtures/",
             "in_file_name": "test_wrangler_input",
             "incoming_message_group_id": "test_wrangler_input",
             "location": "fixtures/",
