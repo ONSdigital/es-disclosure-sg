@@ -19,6 +19,7 @@ class RuntimeSchema(Schema):
     disclosivity_marker = fields.Str(required=True)
     disclosure_stages = fields.Str(required=True)
     explanation = fields.Str(required=True)
+    final_output_location = fields.Str(required=True)
     in_file_name = fields.Str(required=True)
     incoming_message_group_id = fields.Str(required=True)
     location = fields.Str(required=True)
@@ -98,6 +99,7 @@ def lambda_handler(event, context):
         disclosivity_marker = runtime_variables["disclosivity_marker"]
         disclosure_stages = runtime_variables["disclosure_stages"]
         explanation = runtime_variables["explanation"]
+        final_output_location = runtime_variables["final_output_location"]
         in_file_name = runtime_variables["in_file_name"]
         incoming_message_group_id = runtime_variables["incoming_message_group_id"]
         location = runtime_variables["location"]
@@ -204,7 +206,8 @@ def lambda_handler(event, context):
         output_data = formatted_data["data"]
 
         aws_functions.save_dataframe_to_csv(pd.read_json(output_data, dtype=False),
-                                            bucket_name, out_file_name, location)
+                                            bucket_name, out_file_name,
+                                            final_output_location)
 
         if receipt_handle:
             sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=str(receipt_handle))
