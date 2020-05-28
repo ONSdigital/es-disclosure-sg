@@ -1,23 +1,27 @@
 import json
 import logging
 
-import marshmallow
 import pandas as pd
 from es_aws_functions import general_functions
+from marshmallow import EXCLUDE, Schema, fields
 
 
-class RuntimeSchema(marshmallow.Schema):
-    """
-    Class to set up the environment variables schema.
-    """
-    disclosivity_marker = marshmallow.fields.Str(required=True)
-    publishable_indicator = marshmallow.fields.Str(required=True)
-    explanation = marshmallow.fields.Str(required=True)
-    total_columns = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
-    cell_total_column = marshmallow.fields.Str(required=True)
-    data = marshmallow.fields.Str(required=True)
-    unique_identifier = marshmallow.fields.List(marshmallow.fields.Str(), required=True)
-    run_id = marshmallow.fields.Str(required=True)
+class RuntimeSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    def handle_error(self, e, data, **kwargs):
+        logging.error(f"Error validating runtime params: {e}")
+        raise ValueError(f"Error validating runtime params: {e}")
+
+    disclosivity_marker = fields.Str(required=True)
+    publishable_indicator = fields.Str(required=True)
+    explanation = fields.Str(required=True)
+    total_columns = fields.List(fields.Str(), required=True)
+    cell_total_column = fields.Str(required=True)
+    data = fields.Str(required=True)
+    unique_identifier = fields.List(fields.Str(), required=True)
+    run_id = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -46,10 +50,7 @@ def lambda_handler(event, context):
         # Because it is used in exception handling
         run_id = event["RuntimeVariables"]["run_id"]
 
-        runtime_variables, errors = RuntimeSchema().load(event["RuntimeVariables"])
-        if errors:
-            logger.error(f"Error validating runtime params: {errors}")
-            raise ValueError(f"Error validating runtime params: {errors}")
+        runtime_variables = RuntimeSchema().load(event["RuntimeVariables"])
 
         logger.info("Validated parameters.")
 
