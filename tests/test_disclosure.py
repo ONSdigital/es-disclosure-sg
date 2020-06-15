@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from es_aws_functions import exception_classes, test_generic_library
 from moto import mock_s3
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
 import disclosure_wrangler as lambda_wrangler_function
 import stage1_method as lambda_method_function_1
@@ -281,7 +281,7 @@ def test_disclosure(which_lambda, which_runtime, which_input_file, which_output_
 
     with open(which_output_file, "r") as file_2:
         file_data = file_2.read()
-    prepared_data = pd.DataFrame(json.loads(file_data))
+    prepared_data = pd.DataFrame(json.loads(file_data)).sort_index(axis=1)
 
     produced_data = produced_data.sort_index(axis=1)
 
@@ -319,7 +319,7 @@ def test_method_success(which_lambda, which_runtime, which_input_file, which_out
     output = which_lambda.lambda_handler(
         which_runtime, test_generic_library.context_object)
 
-    produced_data = pd.DataFrame(json.loads(output["data"]))
+    produced_data = pd.DataFrame(json.loads(output["data"])).sort_index(axis=1)
 
     with open(which_output_file, "r") as file_2:
         file_data = file_2.read()
