@@ -35,14 +35,10 @@ class RuntimeSchema(Schema):
     explanation = fields.Str(required=True)
     final_output_location = fields.Str(required=True)
     in_file_name = fields.Str(required=True)
-    incoming_message_group_id = fields.Str(required=True)
-    location = fields.Str(required=True)
     out_file_name = fields.Str(required=True)
-    outgoing_message_group_id = fields.Str(required=True)
     parent_column = fields.Str(required=True)
     publishable_indicator = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
-    queue_url = fields.Str(required=True)
     stage5_threshold = fields.Str(required=True)
     threshold = fields.Str(required=True)
     top1_column = fields.Str(required=True)
@@ -62,12 +58,9 @@ def lambda_handler(event, context):
         disclosure_stages: The stages of disclosure you wish to run e.g. (1 2 5)
         explanation: The name of the column to put reason for pass/fail.
         in_file_name: Input file specified.
-        incoming_message_group_id: Input ID specified.
         out_file_name: Output file specified.
-        outgoing_message_group_id: Output ID specified.
         parent_column: The name of the column holding the count of parent company.
         publishable_indicator: The name of the column to put "publish" marker.
-        sqs_queue_url: The URL of the sqs queue used for the run.
         stage5_threshold: The threshold used in the disclosure calculation.
         threshold: The threshold used in the disclosure steps.
         top1_column: The name of the column largest contributor to the cell.
@@ -109,14 +102,10 @@ def lambda_handler(event, context):
         explanation = runtime_variables["explanation"]
         final_output_location = runtime_variables["final_output_location"]
         in_file_name = runtime_variables["in_file_name"]
-        incoming_message_group_id = runtime_variables["incoming_message_group_id"]
-        location = runtime_variables["location"]
         out_file_name = runtime_variables["out_file_name"]
-        outgoing_message_group_id = runtime_variables["outgoing_message_group_id"]
         parent_column = runtime_variables["parent_column"]
         publishable_indicator = runtime_variables["publishable_indicator"]
         sns_topic_arn = runtime_variables["sns_topic_arn"]
-        sqs_queue_url = runtime_variables["queue_url"]
         stage5_threshold = runtime_variables["stage5_threshold"]
         threshold = runtime_variables["threshold"]
         top1_column = runtime_variables["top1_column"]
@@ -125,13 +114,9 @@ def lambda_handler(event, context):
         unique_identifier = runtime_variables["unique_identifier"]
 
         # Set up clients
-        sqs = boto3.client("sqs", "eu-west-2")
         lambda_client = boto3.client("lambda", "eu-west-2")
 
-        data, receipt_handle = aws_functions.get_dataframe(sqs_queue_url, bucket_name,
-                                                           in_file_name,
-                                                           incoming_message_group_id,
-                                                           location)
+        data = aws_functions.read_dataframe_from_s3(bucket_name, in_file_name)
         logger.info("Successfully retrieved data")
 
         formatted_data = data.to_json(orient="records")
@@ -206,8 +191,7 @@ def lambda_handler(event, context):
                 "run_id": run_id
             }
 
-        aws_functions.save_data(bucket_name, out_file_name, formatted_data["data"],
-                                sqs_queue_url, outgoing_message_group_id, location)
+        aws_functions.save_to_s3(bucket_name, out_file_name, formatted_data["data"])
 
         logger.info("Successfully sent data to s3")
 
@@ -216,10 +200,6 @@ def lambda_handler(event, context):
         aws_functions.save_dataframe_to_csv(pd.read_json(output_data, dtype=False),
                                             bucket_name, out_file_name,
                                             final_output_location)
-
-        if receipt_handle:
-            sqs.delete_message(QueueUrl=sqs_queue_url, ReceiptHandle=str(receipt_handle))
-            logger.info("Successfully deleted input data from s3")
 
         aws_functions.send_sns_message(checkpoint, sns_topic_arn, "Disclosure")
         logger.info("Successfully sent message to sns")
