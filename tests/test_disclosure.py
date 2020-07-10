@@ -377,10 +377,12 @@ def test_wrangler_success_passed():
 @mock_s3
 @mock.patch('disclosure_wrangler.aws_functions.save_to_s3',
             side_effect=test_generic_library.replacement_save_to_s3)
-def test_wrangler_success_returned(mock_s3_put):
+@mock.patch('disclosure_wrangler.aws_functions.save_dataframe_to_csv')
+def test_wrangler_success_returned(mock_s3_put, mock_s3_csv):
     """
     Runs the wrangler function.
     :param mock_s3_put - Replacement Function For The Data Saving AWS Functionality.
+    :param mock_s3_csv - Mock Out Secondary Save As Unneeded.
     :return Test Pass/Fail
     """
     bucket_name = wrangler_environment_variables["bucket_name"]
