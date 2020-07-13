@@ -198,8 +198,7 @@ def lambda_handler(event, context):
         output_data = formatted_data["data"]
 
         aws_functions.save_dataframe_to_csv(pd.read_json(output_data, dtype=False),
-                                            bucket_name, out_file_name,
-                                            final_output_location)
+                                            bucket_name, final_output_location)
 
         aws_functions.send_sns_message(checkpoint, sns_topic_arn, "Disclosure")
         logger.info("Successfully sent message to sns")
