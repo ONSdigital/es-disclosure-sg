@@ -72,13 +72,9 @@ wrangler_runtime_variables = {
             "explanation": "reason",
             "final_output_location": "fixtures/",
             "in_file_name": "test_wrangler_input",
-            "incoming_message_group_id": "test_wrangler_input",
-            "location": "fixtures/",
             "out_file_name": "test_wrangler_output.json",
-            "outgoing_message_group_id": "test_wrangler_output.json",
             "parent_column": "ent_ref_count",
             "publishable_indicator": "publish",
-            "queue_url": "test_url",
             "run_id": "666",
             "sns_topic_arn": "fake_sns_arn",
             "stage5_threshold": "0.1",
@@ -137,9 +133,7 @@ def test_general_error(which_lambda, which_runtime_variables,
 
 
 @mock_s3
-@mock.patch('disclosure_wrangler.aws_functions.get_dataframe',
-            side_effect=test_generic_library.replacement_get_dataframe)
-def test_incomplete_read_error(mock_s3_get):
+def test_incomplete_read_error():
     file_list = ["test_wrangler_input.json"]
 
     test_generic_library.incomplete_read_error(lambda_wrangler_function,
@@ -183,9 +177,7 @@ def test_key_error(which_lambda, which_environment_variables, expected_message,
 
 
 @mock_s3
-@mock.patch('disclosure_wrangler.aws_functions.get_dataframe',
-            side_effect=test_generic_library.replacement_get_dataframe)
-def test_method_error(mock_s3_get):
+def test_method_error():
     file_list = ["test_wrangler_input.json"]
 
     test_generic_library.wrangler_method_error(lambda_wrangler_function,
@@ -330,12 +322,10 @@ def test_method_success(which_lambda, which_runtime, which_input_file, which_out
 
 
 @mock_s3
-@mock.patch('disclosure_wrangler.aws_functions.get_dataframe',
-            side_effect=test_generic_library.replacement_get_dataframe)
-def test_wrangler_success_passed(mock_s3_get):
+def test_wrangler_success_passed():
     """
     Runs the wrangler function.
-    :param mock_s3_get - Replacement Function For The Data Retrieval AWS Functionality.
+    :param None
     :return Test Pass/Fail
     """
     bucket_name = wrangler_environment_variables["bucket_name"]
@@ -385,15 +375,14 @@ def test_wrangler_success_passed(mock_s3_get):
 
 
 @mock_s3
-@mock.patch('disclosure_wrangler.aws_functions.get_dataframe',
-            side_effect=test_generic_library.replacement_get_dataframe)
-@mock.patch('disclosure_wrangler.aws_functions.save_data',
-            side_effect=test_generic_library.replacement_save_data)
-def test_wrangler_success_returned(mock_s3_get, mock_s3_put):
+@mock.patch('disclosure_wrangler.aws_functions.save_to_s3',
+            side_effect=test_generic_library.replacement_save_to_s3)
+@mock.patch('disclosure_wrangler.aws_functions.save_dataframe_to_csv')
+def test_wrangler_success_returned(mock_s3_put, mock_s3_csv):
     """
     Runs the wrangler function.
-    :param mock_s3_get - Replacement Function For The Data Retrieval AWS Functionality.
-    :param mock_s3_put - Replacement Function For The Data Saveing AWS Functionality.
+    :param mock_s3_put - Replacement Function For The Data Saving AWS Functionality.
+    :param mock_s3_csv - Mock Out Secondary Save As Unneeded.
     :return Test Pass/Fail
     """
     bucket_name = wrangler_environment_variables["bucket_name"]
