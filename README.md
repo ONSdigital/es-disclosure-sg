@@ -33,7 +33,7 @@ sns_topic_arn: - The sns topic to send summary information to.<br>
 - Collect the data from s3 <br>
 - Turn input data into dataframe <br>
 - Pass input dataframe to the appropriate method <br>
-- Send returned data from method to s3 queue <br>
+- Send returned data from method to s3 <br>
 - Send summary info to sns. <br>
 <br>
 
