@@ -8,7 +8,6 @@ Disclosure utilises a single wrangler to orchestrated which method stages are tr
 
 ### Common Environment Variables
 Each wrangler has these variables:<br>
-checkpoint:    - Used by step function for starting part way through the process.(default of 5)<br>
 bucket_name:   - The name of the bucket used to store data.<br>
 method_name:   - The method that this wrangler calls.<br>
 

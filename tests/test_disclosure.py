@@ -12,11 +12,8 @@ import stage1_method as lambda_method_function_1
 import stage2_method as lambda_method_function_2
 import stage5_method as lambda_method_function_5
 
-method_environment_variables = {}
-
 wrangler_environment_variables = {
     "bucket_name": "test_bucket",
-    "checkpoint": "999",
     "method_name": "es-disclosure-stage--method"
 }
 
@@ -112,13 +109,13 @@ def test_client_error(which_lambda, which_runtime_variables,
     "expected_message,assertion",
     [
         (lambda_method_function_1, method_runtime_variables_1,
-         method_environment_variables, "stage1_method.RuntimeSchema",
+         False, "stage1_method.RuntimeSchema",
          'Exception', test_generic_library.method_assert),
         (lambda_method_function_2, method_runtime_variables_1,
-         method_environment_variables, "stage2_method.RuntimeSchema",
+         False, "stage2_method.RuntimeSchema",
          'Exception', test_generic_library.method_assert),
         (lambda_method_function_5, method_runtime_variables_1,
-         method_environment_variables, "stage5_method.RuntimeSchema",
+         False, "stage5_method.RuntimeSchema",
          'Exception', test_generic_library.method_assert),
         (lambda_wrangler_function, wrangler_runtime_variables,
          wrangler_environment_variables, "disclosure_wrangler.EnvironmentSchema",
@@ -148,11 +145,11 @@ def test_incomplete_read_error():
     "which_lambda,which_environment_variables,expected_message,assertion," +
     "which_runtime_variables",
     [
-        (lambda_method_function_1, method_environment_variables,
+        (lambda_method_function_1, False,
          "KeyError", test_generic_library.method_assert, method_runtime_variables_1),
-        (lambda_method_function_2, method_environment_variables,
+        (lambda_method_function_2, False,
          "KeyError", test_generic_library.method_assert, method_runtime_variables_2),
-        (lambda_method_function_5, method_environment_variables,
+        (lambda_method_function_5, False,
          "KeyError", test_generic_library.method_assert, method_runtime_variables_5),
         (lambda_wrangler_function, wrangler_environment_variables,
          "KeyError", test_generic_library.wrangler_assert, None)
