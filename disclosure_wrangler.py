@@ -69,7 +69,7 @@ def lambda_handler(event, context):
     }
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
-        {"success": True, "checkpoint": <output - Type: String>}
+        {"success": True - Type: String>}
         {"success": False, "error": <error message - Type: String>}
     """
     logger = logging.getLogger("Disclosure Logger")
