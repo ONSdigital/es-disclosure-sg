@@ -16,7 +16,6 @@ class EnvironmentSchema(Schema):
         logging.error(f"Error validating environment params: {e}")
         raise ValueError(f"Error validating environment params: {e}")
 
-    checkpoint = fields.Str(required=True)
     bucket_name = fields.Str(required=True)
     method_name = fields.Str(required=True)
 
@@ -70,7 +69,7 @@ def lambda_handler(event, context):
     }
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
-        {"success": True, "checkpoint": <output - Type: String>}
+        {"success": True}
         {"success": False, "error": <error message - Type: String>}
     """
     logger = logging.getLogger("Disclosure Logger")
@@ -91,7 +90,6 @@ def lambda_handler(event, context):
         logger.info("Validated parameters.")
 
         # Environment Variables
-        checkpoint = environment_variables["checkpoint"]
         bucket_name = environment_variables["bucket_name"]
         method_name = environment_variables["method_name"]
 
@@ -200,7 +198,7 @@ def lambda_handler(event, context):
         aws_functions.save_dataframe_to_csv(pd.read_json(output_data, dtype=False),
                                             bucket_name, final_output_location)
 
-        aws_functions.send_sns_message(checkpoint, sns_topic_arn, "Disclosure")
+        aws_functions.send_sns_message(sns_topic_arn, "Disclosure")
         logger.info("Successfully sent message to sns")
 
     except Exception as e:
@@ -213,7 +211,7 @@ def lambda_handler(event, context):
 
     logger.info("Successfully completed module: " + current_module)
 
-    return {"success": True, "checkpoint": checkpoint}
+    return {"success": True}
 
 
 def invoke_method(lambda_execution_name, payload, lambda_client):
