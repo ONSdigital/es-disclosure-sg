@@ -377,7 +377,7 @@ def test_wrangler_success_passed():
 @mock.patch('disclosure_wrangler.aws_functions.save_dataframe_to_csv')
 def test_wrangler_success_returned(mock_s3_put, mock_s3_csv):
     """
-    Runs the wrangler function.
+    Runs the wrangler function which calls the disclosure stages and returns the result.
     :param mock_s3_put - Replacement Function For The Data Saving AWS Functionality.
     :param mock_s3_csv - Mock Out Secondary Save As Unneeded.
     :return Test Pass/Fail

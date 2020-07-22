@@ -77,10 +77,12 @@ def lambda_handler(event, context):
 
         input_dataframe = pd.DataFrame(input_json)
         stage_5_output = pd.DataFrame()
+        publish_columns = []
         first_loop = True
         for total_column in total_columns:
             this_disclosivity_marker = disclosivity_marker + "_" + total_column
             this_publishable_indicator = publishable_indicator + "_" + total_column
+            publish_columns.append(this_publishable_indicator)
             this_explanation = explanation + "_" + total_column
             this_top1_column = total_column + "_" + top1_column
             this_top2_column = total_column + "_" + top2_column
@@ -109,6 +111,8 @@ def lambda_handler(event, context):
                         + str(total_column))
 
         logger.info("Successfully completed Disclosure")
+
+        stage_5_output.drop(publish_columns, axis=1, inplace=True)
 
         final_output = {"data": stage_5_output.to_json(orient="records")}
 
@@ -154,8 +158,8 @@ def disclosure(input_df, disclosivity_marker, publishable_indicator,
                 row[disclosivity_marker] = "Yes"
                 row[publishable_indicator] = "No"
                 row[explanation] = "Stage 5 - Score is " + str(row["Score"])\
-                                   + ". This doesnt meet threshold of (>=" + threshold\
-                                   + ")"
+                                   + ". This does not meet threshold of (>=" \
+                                   + threshold + ")"
         return row
 
     output_df = input_df.apply(run_disclosure, axis=1)

@@ -52,7 +52,7 @@
         "marine": "n",
         "period": 201809,
         "publish_Q608_total": "No",
-        "reason_Q608_total": "Stage 5 - Score is 0.8827403052101391. This doesnt meet threshold of (>=1)",
+        "reason_Q608_total": "Stage 5 - Score is 0.8827403052101391. This does not meet threshold of (>=1)",
         "region": 2,
         "responder_id": 20000000002,
         "response_type": 2,
