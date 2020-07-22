@@ -112,6 +112,7 @@ def lambda_handler(event, context):
 
         logger.info("Successfully completed Disclosure")
 
+        # Removes the publish columns as not needed on final output.
         stage_5_output.drop(publish_columns, axis=1, inplace=True)
 
         final_output = {"data": stage_5_output.to_json(orient="records")}
