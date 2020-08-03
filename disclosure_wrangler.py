@@ -72,10 +72,9 @@ def lambda_handler(event, context):
         {"success": True}
         {"success": False, "error": <error message - Type: String>}
     """
-    logger = logging.getLogger("Disclosure Logger")
-    logger.setLevel(logging.INFO)
     current_module = "Disclosure Wrangler"
     error_message = ""
+    logger = general_functions.get_logger()
     # Define run_id outside of try block
     run_id = 0
     try:
