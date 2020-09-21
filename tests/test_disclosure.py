@@ -19,6 +19,7 @@ wrangler_environment_variables = {
 
 method_runtime_variables_1 = {
     "RuntimeVariables": {
+        "bpm_queue_url": "fake_queue_url",
         "cell_total_column": "cell_total",
         "disclosivity_marker": "disclosive",
         "explanation": "reason",
@@ -32,6 +33,7 @@ method_runtime_variables_1 = {
 
 method_runtime_variables_2 = {
     "RuntimeVariables": {
+        "bpm_queue_url": "fake_queue_url",
         "disclosivity_marker": "disclosive",
         "explanation": "reason",
         "data": None,
@@ -46,6 +48,7 @@ method_runtime_variables_2 = {
 
 method_runtime_variables_5 = {
     "RuntimeVariables": {
+        "bpm_queue_url": "fake_queue_url",
         "cell_total_column": "cell_total",
         "disclosivity_marker": "disclosive",
         "explanation": "reason",
@@ -63,6 +66,7 @@ method_runtime_variables_5 = {
 wrangler_runtime_variables = {
     "RuntimeVariables":
         {
+            "bpm_queue_url": "fake_queue_url",
             "cell_total_column": "cell_total",
             "disclosivity_marker": "disclosive",
             "disclosure_stages": "1 2 5",
@@ -79,6 +83,7 @@ wrangler_runtime_variables = {
             "top1_column": "largest_contributor",
             "top2_column": "second_largest_contributor",
             "total_columns": ["Q608_total", "Q606_other_gravel"],
+            "total_steps": "6",
             "unique_identifier": ["responder_id"]
         }
 }
@@ -96,7 +101,8 @@ wrangler_runtime_variables = {
          wrangler_environment_variables, None,
          "ClientError", test_generic_library.wrangler_assert)
     ])
-def test_client_error(which_lambda, which_runtime_variables,
+@mock.patch('disclosure_wrangler.aws_functions.send_bpm_status')
+def test_client_error(mock_send_bpm_status, which_lambda, which_runtime_variables,
                       which_environment_variables, which_data,
                       expected_message, assertion):
     test_generic_library.client_error(which_lambda, which_runtime_variables,
@@ -154,8 +160,9 @@ def test_incomplete_read_error():
         (lambda_wrangler_function, wrangler_environment_variables,
          "KeyError", test_generic_library.wrangler_assert, None)
     ])
-def test_key_error(which_lambda, which_environment_variables, expected_message,
-                   assertion, which_runtime_variables):
+@mock.patch('disclosure_wrangler.aws_functions.send_bpm_status')
+def test_key_error(mock_send_bpm_status, which_lambda, which_environment_variables,
+                   expected_message, assertion, which_runtime_variables):
     if which_runtime_variables is None:
         test_generic_library.key_error(which_lambda,
                                        which_environment_variables,

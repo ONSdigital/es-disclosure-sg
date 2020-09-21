@@ -14,6 +14,7 @@ class RuntimeSchema(Schema):
         logging.error(f"Error validating runtime params: {e}")
         raise ValueError(f"Error validating runtime params: {e}")
 
+    bpm_queue_url = fields.Str(required=True)
     disclosivity_marker = fields.Str(required=True)
     publishable_indicator = fields.Str(required=True)
     explanation = fields.Str(required=True)
@@ -32,6 +33,7 @@ def lambda_handler(event, context):
     Main entry point into method
     :param event: json payload containing:
             data: input data.
+            bpm_queue_url: Queue url to send BPM status message.
             disclosivity_marker: The name of the column to put "disclosive" marker.
             publishable_indicator: The name of the column to put "publish" marker.
             explanation: The name of the column to put reason for pass/fail.
@@ -50,6 +52,8 @@ def lambda_handler(event, context):
     current_module = "Disclosure Stage 5 Method"
     error_message = ""
     logger = general_functions.get_logger()
+    # Set-up variables for status message
+    bpm_queue_url = None
     # Define run_id outside of try block
     run_id = 0
     try:
@@ -62,6 +66,7 @@ def lambda_handler(event, context):
         logger.info("Validated parameters.")
 
         # Runtime Variables
+        bpm_queue_url = runtime_variables["bpm_queue_url"]
         disclosivity_marker = runtime_variables["disclosivity_marker"]
         publishable_indicator = runtime_variables["publishable_indicator"]
         explanation = runtime_variables["explanation"]
@@ -118,7 +123,8 @@ def lambda_handler(event, context):
 
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
-                                                           run_id, context)
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
     finally:
         if (len(error_message)) > 0:
             logger.error(error_message)
