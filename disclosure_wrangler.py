@@ -28,6 +28,7 @@ class RuntimeSchema(Schema):
         logging.error(f"Error validating runtime params: {e}")
         raise ValueError(f"Error validating runtime params: {e}")
 
+    bpm_queue_url = fields.Str(required=True)
     cell_total_column = fields.Str(required=True)
     disclosivity_marker = fields.Str(required=True)
     disclosure_stages = fields.Str(required=True)
@@ -43,6 +44,7 @@ class RuntimeSchema(Schema):
     top1_column = fields.Str(required=True)
     top2_column = fields.Str(required=True)
     total_columns = fields.List(fields.String, required=True)
+    total_steps = fields.Str(required=True)
     unique_identifier = fields.List(fields.String, required=True)
 
 
@@ -52,6 +54,7 @@ def lambda_handler(event, context):
     be used to identify specific responders.
     :param event: JSON payload containing:
     RuntimeVariables:{
+        bpm_queue_url: Queue url to send BPM status message.
         cell_total_column: The name of the column holding the cell total.
         disclosivity_marker: The name of the column to put "disclosive" marker.
         disclosure_stages: The stages of disclosure you wish to run e.g. (1 2 5)
@@ -65,6 +68,7 @@ def lambda_handler(event, context):
         top1_column: The name of the column largest contributor to the cell.
         top2_column: The name of the column second largest contributor to the cell.
         total_column: The name of the column holding the cell total.
+        total_steps: The total number of steps in the system.
         unique_identifier: A list of the column names to specify a unique cell.
     }
     :param context: AWS Context Object.
@@ -75,6 +79,9 @@ def lambda_handler(event, context):
     current_module = "Disclosure Wrangler"
     error_message = ""
     logger = general_functions.get_logger()
+    # Set-up variables for status message
+    current_step_num = "6"
+    bpm_queue_url = None
     # Define run_id outside of try block
     run_id = 0
     try:
@@ -93,6 +100,7 @@ def lambda_handler(event, context):
         method_name = environment_variables["method_name"]
 
         # Runtime Variables
+        bpm_queue_url = runtime_variables["bpm_queue_url"]
         cell_total_column = runtime_variables["cell_total_column"]
         disclosivity_marker = runtime_variables["disclosivity_marker"]
         disclosure_stages = runtime_variables["disclosure_stages"]
@@ -108,7 +116,15 @@ def lambda_handler(event, context):
         top1_column = runtime_variables["top1_column"]
         top2_column = runtime_variables["top2_column"]
         total_columns = runtime_variables["total_columns"]
+        total_steps = runtime_variables["total_steps"]
         unique_identifier = runtime_variables["unique_identifier"]
+
+        logger.info("Retrieved configuration variables.")
+
+        # Send start of method status to BPM.
+        status = "IN PROGRESS"
+        aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id,
+                                      current_step_num, total_steps)
 
         # Set up clients
         lambda_client = boto3.client("lambda", "eu-west-2")
@@ -122,6 +138,7 @@ def lambda_handler(event, context):
         disclosure_stages_list.sort()
 
         generic_json_payload = {
+            "bpm_queue_url": bpm_queue_url,
             "data": formatted_data,
             "disclosivity_marker": disclosivity_marker,
             "publishable_indicator": publishable_indicator,
@@ -179,6 +196,7 @@ def lambda_handler(event, context):
             # Located here as after the first loop it requires formatted data to be
             # referenced with "data" and the JSON needs to be reset to use the right data.
             generic_json_payload = {
+                "bpm_queue_url": bpm_queue_url,
                 "data": formatted_data["data"],
                 "disclosivity_marker": disclosivity_marker,
                 "publishable_indicator": publishable_indicator,
@@ -202,13 +220,19 @@ def lambda_handler(event, context):
 
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
-                                                           run_id, context)
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
     finally:
         if (len(error_message)) > 0:
             logger.error(error_message)
             raise exception_classes.LambdaFailure(error_message)
 
     logger.info("Successfully completed module: " + current_module)
+
+    # Send start of method status to BPM.
+    status = "DONE"
+    aws_functions.send_bpm_status(bpm_queue_url, current_module, status, run_id,
+                                  current_step_num, total_steps)
 
     return {"success": True}
 
