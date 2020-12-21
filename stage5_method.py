@@ -2,7 +2,7 @@ import json
 import logging
 
 import pandas as pd
-from es_aws_functions import general_functions
+from es_aws_functions import general_functions, exception_classes
 from marshmallow import EXCLUDE, Schema, fields
 
 
@@ -26,6 +26,8 @@ class RuntimeSchema(Schema):
     unique_identifier = fields.List(fields.Str(), required=True)
     total_columns = fields.List(fields.Str(), required=True)
     run_id = fields.Str(required=True)
+    environment = fields.Str(required=True)
+    survey = fields.Str(required=True)
 
 
 def lambda_handler(event, context):
@@ -44,6 +46,8 @@ def lambda_handler(event, context):
             total_columns: The names of the columns holding the cell totals.
                         Included so that correct disclosure columns used.
             unique_identifier: The name of the column holding the contributor id.
+            environment: The operating environment to use in the spp logger.
+            survey: The survey selected to be used in the logger.
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
             {"success": True, "data": <stage 5 output - json >}
@@ -51,7 +55,6 @@ def lambda_handler(event, context):
     """
     current_module = "Disclosure Stage 5 Method"
     error_message = ""
-    logger = general_functions.get_logger()
     # Set-up variables for status message
     bpm_queue_url = None
     # Define run_id outside of try block
@@ -60,10 +63,7 @@ def lambda_handler(event, context):
         # Retrieve run_id before input validation
         # Because it is used in exception handling
         run_id = event["RuntimeVariables"]["run_id"]
-
         runtime_variables = RuntimeSchema().load(event["RuntimeVariables"])
-
-        logger.info("Validated parameters.")
 
         # Runtime Variables
         bpm_queue_url = runtime_variables["bpm_queue_url"]
@@ -76,9 +76,26 @@ def lambda_handler(event, context):
         threshold = runtime_variables["threshold"]
         total_columns = runtime_variables["total_columns"]
         unique_identifier = runtime_variables["unique_identifier"]
-
+        environment = runtime_variables["environment"]
+        survey = runtime_variables["survey"]
         input_json = json.loads(runtime_variables["data"])
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
+        raise exception_classes.LambdaFailure(error_message)
 
+    try:
+        logger = general_functions.get_logger(survey, current_module, environment,
+                                              run_id)
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
+        raise exception_classes.LambdaFailure(error_message)
+
+    try:
+        logger.info("Started - retrieved wrangler configuration variables.")
         input_dataframe = pd.DataFrame(input_json)
         stage_5_output = pd.DataFrame()
         publish_columns = []
@@ -120,7 +137,6 @@ def lambda_handler(event, context):
         stage_5_output.drop(publish_columns, axis=1, inplace=True)
 
         final_output = {"data": stage_5_output.to_json(orient="records")}
-
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
                                                            run_id, context=context,
