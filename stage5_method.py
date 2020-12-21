@@ -15,19 +15,19 @@ class RuntimeSchema(Schema):
         raise ValueError(f"Error validating runtime params: {e}")
 
     bpm_queue_url = fields.Str(required=True)
-    disclosivity_marker = fields.Str(required=True)
-    publishable_indicator = fields.Str(required=True)
-    explanation = fields.Str(required=True)
-    top1_column = fields.Str(required=True)
-    top2_column = fields.Str(required=True)
     cell_total_column = fields.Str(required=True)
     data = fields.Str(required=True)
-    threshold = fields.Str(required=True)
-    unique_identifier = fields.List(fields.Str(), required=True)
-    total_columns = fields.List(fields.Str(), required=True)
-    run_id = fields.Str(required=True)
+    disclosivity_marker = fields.Str(required=True)
     environment = fields.Str(required=True)
+    explanation = fields.Str(required=True)
+    publishable_indicator = fields.Str(required=True)
+    run_id = fields.Str(required=True)
     survey = fields.Str(required=True)
+    threshold = fields.Str(required=True)
+    top1_column = fields.Str(required=True)
+    top2_column = fields.Str(required=True)
+    total_columns = fields.List(fields.Str(), required=True)
+    unique_identifier = fields.List(fields.Str(), required=True)
 
 
 def lambda_handler(event, context):
@@ -37,17 +37,17 @@ def lambda_handler(event, context):
             data: input data.
             bpm_queue_url: Queue url to send BPM status message.
             disclosivity_marker: The name of the column to put "disclosive" marker.
-            publishable_indicator: The name of the column to put "publish" marker.
+            environment: The operating environment to use in the spp logger.
             explanation: The name of the column to put reason for pass/fail.
-            total_column: The name of the column holding the cell total.
+            publishable_indicator: The name of the column to put "publish" marker.
+            survey: The survey selected to be used in the logger.
+            threshold: The threshold used in the disclosure calculation.
             top1_column: The name of the column largest contributor to the cell.
             top2_column: The name of the column second largest contributor to the cell.
-            threshold: The threshold used in the disclosure calculation.
+            total_column: The name of the column holding the cell total.
             total_columns: The names of the columns holding the cell totals.
                         Included so that correct disclosure columns used.
             unique_identifier: The name of the column holding the contributor id.
-            environment: The operating environment to use in the spp logger.
-            survey: The survey selected to be used in the logger.
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
             {"success": True, "data": <stage 5 output - json >}
@@ -67,17 +67,18 @@ def lambda_handler(event, context):
 
         # Runtime Variables
         bpm_queue_url = runtime_variables["bpm_queue_url"]
+        cell_total_column = runtime_variables["cell_total_column"]
         disclosivity_marker = runtime_variables["disclosivity_marker"]
-        publishable_indicator = runtime_variables["publishable_indicator"]
+        environment = runtime_variables["environment"]
         explanation = runtime_variables["explanation"]
+        publishable_indicator = runtime_variables["publishable_indicator"]
+        survey = runtime_variables["survey"]
+        threshold = runtime_variables["threshold"]
         top1_column = runtime_variables["top1_column"]
         top2_column = runtime_variables["top2_column"]
-        cell_total_column = runtime_variables["cell_total_column"]
-        threshold = runtime_variables["threshold"]
         total_columns = runtime_variables["total_columns"]
         unique_identifier = runtime_variables["unique_identifier"]
-        environment = runtime_variables["environment"]
-        survey = runtime_variables["survey"]
+
         input_json = json.loads(runtime_variables["data"])
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,

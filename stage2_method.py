@@ -15,35 +15,35 @@ class RuntimeSchema(Schema):
         raise ValueError(f"Error validating runtime params: {e}")
 
     bpm_queue_url = fields.Str(required=True)
+    data = fields.Str(required=True)
     disclosivity_marker = fields.Str(required=True)
-    publishable_indicator = fields.Str(required=True)
+    environment = fields.Str(required=True)
     explanation = fields.Str(required=True)
     parent_column = fields.Str(required=True)
-    threshold = fields.Str(required=True)
-    data = fields.Str(required=True)
-    unique_identifier = fields.List(fields.Str(), required=True)
-    total_columns = fields.List(fields.Str(), required=True)
+    publishable_indicator = fields.Str(required=True)
     run_id = fields.Str(required=True)
-    environment = fields.Str(required=True)
     survey = fields.Str(required=True)
+    threshold = fields.Str(required=True)
+    total_columns = fields.List(fields.Str(), required=True)
+    unique_identifier = fields.List(fields.Str(), required=True)
 
 
 def lambda_handler(event, context):
     """
     Main entry point into method
     :param event: json payload containing:
-            data: input data.
             bpm_queue_url: Queue url to send BPM status message.
+            data: input data.
             disclosivity_marker: The name of the column to put "disclosive" marker.
-            publishable_indicator: The name of the column to put "publish" marker.
+            environment: The operating environment to use in the spp logger.
             explanation: The name of the column to put reason for pass/fail.
             parent_column: The name of the column holding the count of parent company.
+            publishable_indicator: The name of the column to put "publish" marker.
+            survey: The survey selected to be used in the logger.
             threshold: The threshold above which a row is not disclosive.
             total_columns: The names of the column holding the cell totals.
                         Included so that correct disclosure columns used.
             unique_identifier: The name of the column holding the contributor id.
-            environment: The operating environment to use in the spp logger.
-            survey: The survey selected to be used in the logger.
     :param context: AWS Context Object.
     :return final_output: Dict containing either:
             {"success": True, "data": <stage 2 output - json >}
@@ -64,14 +64,15 @@ def lambda_handler(event, context):
         # Runtime Variables
         bpm_queue_url = runtime_variables["bpm_queue_url"]
         disclosivity_marker = runtime_variables["disclosivity_marker"]
-        publishable_indicator = runtime_variables["publishable_indicator"]
+        environment = runtime_variables["environment"]
         explanation = runtime_variables["explanation"]
         parent_column = runtime_variables["parent_column"]
+        publishable_indicator = runtime_variables["publishable_indicator"]
+        survey = runtime_variables["survey"]
         threshold = int(runtime_variables["threshold"])
         total_columns = runtime_variables["total_columns"]
         unique_identifier = runtime_variables["unique_identifier"]
-        environment = runtime_variables["environment"]
-        survey = runtime_variables["survey"]
+
         input_json = json.loads(runtime_variables["data"])
     except Exception as e:
         error_message = general_functions.handle_exception(e, current_module,
