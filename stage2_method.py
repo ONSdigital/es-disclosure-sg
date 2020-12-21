@@ -2,7 +2,7 @@ import json
 import logging
 
 import pandas as pd
-from es_aws_functions import general_functions, exception_classes
+from es_aws_functions import general_functions
 from marshmallow import EXCLUDE, Schema, fields
 
 
@@ -77,7 +77,7 @@ def lambda_handler(event, context):
         error_message = general_functions.handle_exception(e, current_module,
                                                            run_id, context=context,
                                                            bpm_queue_url=bpm_queue_url)
-        raise exception_classes.LambdaFailure(error_message)
+        return {"success": False, "error": error_message}
 
     try:
         logger = general_functions.get_logger(survey, current_module, environment,
@@ -86,7 +86,7 @@ def lambda_handler(event, context):
         error_message = general_functions.handle_exception(e, current_module,
                                                            run_id, context=context,
                                                            bpm_queue_url=bpm_queue_url)
-        raise exception_classes.LambdaFailure(error_message)
+        return {"success": False, "error": error_message}
 
     try:
         logger.info("Started - retrieved wrangler configuration variables.")
