@@ -15,27 +15,31 @@ class RuntimeSchema(Schema):
         raise ValueError(f"Error validating runtime params: {e}")
 
     bpm_queue_url = fields.Str(required=True)
+    data = fields.Str(required=True)
     disclosivity_marker = fields.Str(required=True)
-    publishable_indicator = fields.Str(required=True)
+    environment = fields.Str(required=True)
     explanation = fields.Str(required=True)
     parent_column = fields.Str(required=True)
-    threshold = fields.Str(required=True)
-    data = fields.Str(required=True)
-    unique_identifier = fields.List(fields.Str(), required=True)
-    total_columns = fields.List(fields.Str(), required=True)
+    publishable_indicator = fields.Str(required=True)
     run_id = fields.Str(required=True)
+    survey = fields.Str(required=True)
+    threshold = fields.Str(required=True)
+    total_columns = fields.List(fields.Str(), required=True)
+    unique_identifier = fields.List(fields.Str(), required=True)
 
 
 def lambda_handler(event, context):
     """
     Main entry point into method
     :param event: json payload containing:
-            data: input data.
             bpm_queue_url: Queue url to send BPM status message.
+            data: input data.
             disclosivity_marker: The name of the column to put "disclosive" marker.
-            publishable_indicator: The name of the column to put "publish" marker.
+            environment: The operating environment to use in the spp logger.
             explanation: The name of the column to put reason for pass/fail.
             parent_column: The name of the column holding the count of parent company.
+            publishable_indicator: The name of the column to put "publish" marker.
+            survey: The survey selected to be used in the logger.
             threshold: The threshold above which a row is not disclosive.
             total_columns: The names of the column holding the cell totals.
                         Included so that correct disclosure columns used.
@@ -47,7 +51,6 @@ def lambda_handler(event, context):
     """
     current_module = "Disclosure Stage 2 Method"
     error_message = ""
-    logger = general_functions.get_logger()
     # Set-up variables for status message
     bpm_queue_url = None
     # Define run_id outside of try block
@@ -56,23 +59,38 @@ def lambda_handler(event, context):
         # Retrieve run_id before input validation
         # Because it is used in exception handling
         run_id = event["RuntimeVariables"]["run_id"]
-
         runtime_variables = RuntimeSchema().load(event["RuntimeVariables"])
-
-        logger.info("Validated parameters.")
 
         # Runtime Variables
         bpm_queue_url = runtime_variables["bpm_queue_url"]
         disclosivity_marker = runtime_variables["disclosivity_marker"]
-        publishable_indicator = runtime_variables["publishable_indicator"]
+        environment = runtime_variables["environment"]
         explanation = runtime_variables["explanation"]
         parent_column = runtime_variables["parent_column"]
+        publishable_indicator = runtime_variables["publishable_indicator"]
+        survey = runtime_variables["survey"]
         threshold = int(runtime_variables["threshold"])
         total_columns = runtime_variables["total_columns"]
         unique_identifier = runtime_variables["unique_identifier"]
 
         input_json = json.loads(runtime_variables["data"])
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
+        return {"success": False, "error": error_message}
 
+    try:
+        logger = general_functions.get_logger(survey, current_module, environment,
+                                              run_id)
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
+        return {"success": False, "error": error_message}
+
+    try:
+        logger.info("Started - retrieved wrangler configuration variables.")
         input_dataframe = pd.DataFrame(input_json)
         stage_2_output = pd.DataFrame()
         first_loop = True

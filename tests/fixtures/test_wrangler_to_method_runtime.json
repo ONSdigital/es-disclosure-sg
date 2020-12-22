@@ -3,9 +3,11 @@
     "cell_total_column": "cell_total",
     "data": null,
     "disclosivity_marker": "disclosive",
+    "environment": "sandbox",
     "explanation": "reason",
     "publishable_indicator": "publish",
     "run_id": "666",
+    "survey": "BMI_SG",
     "total_columns": [
         "Q608_total",
         "Q606_other_gravel"

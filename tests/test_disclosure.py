@@ -21,28 +21,32 @@ method_runtime_variables_1 = {
     "RuntimeVariables": {
         "bpm_queue_url": "fake_queue_url",
         "cell_total_column": "cell_total",
-        "disclosivity_marker": "disclosive",
-        "explanation": "reason",
         "data": None,
+        "disclosivity_marker": "disclosive",
+        "environment": "sandbox",
+        "explanation": "reason",
         "publishable_indicator": "publish",
+        "run_id": "666",
+        "survey": "BMI_SG",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
         "unique_identifier": ["responder_id"],
-        "run_id": "666"
     }
 }
 
 method_runtime_variables_2 = {
     "RuntimeVariables": {
         "bpm_queue_url": "fake_queue_url",
-        "disclosivity_marker": "disclosive",
-        "explanation": "reason",
         "data": None,
+        "disclosivity_marker": "disclosive",
+        "environment": "sandbox",
+        "explanation": "reason",
         "parent_column": "ent_ref_count",
         "publishable_indicator": "publish",
+        "run_id": "666",
+        "survey": "BMI_SG",
         "threshold": "7",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
-        "unique_identifier": ["responder_id"],
-        "run_id": "666"
+        "unique_identifier": ["responder_id"]
     }
 }
 
@@ -50,16 +54,18 @@ method_runtime_variables_5 = {
     "RuntimeVariables": {
         "bpm_queue_url": "fake_queue_url",
         "cell_total_column": "cell_total",
-        "disclosivity_marker": "disclosive",
-        "explanation": "reason",
         "data": None,
+        "disclosivity_marker": "disclosive",
+        "environment": "sandbox",
+        "explanation": "reason",
         "publishable_indicator": "publish",
+        "run_id": "666",
+        "survey": "BMI_SG",
         "threshold": "1",
         "top1_column": "largest_contributor",
         "top2_column": "second_largest_contributor",
         "total_columns": ["Q608_total", "Q606_other_gravel"],
-        "unique_identifier": ["responder_id"],
-        "run_id": "666"
+        "unique_identifier": ["responder_id"]
     }
 }
 
@@ -70,6 +76,7 @@ wrangler_runtime_variables = {
             "cell_total_column": "cell_total",
             "disclosivity_marker": "disclosive",
             "disclosure_stages": "1 2 5",
+            "environment": "sandbox",
             "explanation": "reason",
             "final_output_location": "fixtures/",
             "in_file_name": "test_wrangler_input",
@@ -79,6 +86,7 @@ wrangler_runtime_variables = {
             "run_id": "666",
             "sns_topic_arn": "fake_sns_arn",
             "stage5_threshold": "0.1",
+            "survey": "BMI_SG",
             "threshold": "3",
             "top1_column": "largest_contributor",
             "top2_column": "second_largest_contributor",

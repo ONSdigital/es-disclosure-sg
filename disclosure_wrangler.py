@@ -32,6 +32,7 @@ class RuntimeSchema(Schema):
     cell_total_column = fields.Str(required=True)
     disclosivity_marker = fields.Str(required=True)
     disclosure_stages = fields.Str(required=True)
+    environment = fields.Str(required=True)
     explanation = fields.Str(required=True)
     final_output_location = fields.Str(required=True)
     in_file_name = fields.Str(required=True)
@@ -40,6 +41,7 @@ class RuntimeSchema(Schema):
     publishable_indicator = fields.Str(required=True)
     sns_topic_arn = fields.Str(required=True)
     stage5_threshold = fields.Str(required=True)
+    survey = fields.Str(required=True)
     threshold = fields.Str(required=True)
     top1_column = fields.Str(required=True)
     top2_column = fields.Str(required=True)
@@ -58,12 +60,14 @@ def lambda_handler(event, context):
         cell_total_column: The name of the column holding the cell total.
         disclosivity_marker: The name of the column to put "disclosive" marker.
         disclosure_stages: The stages of disclosure you wish to run e.g. (1 2 5)
+        environment: The operating environment to use in the spp logger.
         explanation: The name of the column to put reason for pass/fail.
         in_file_name: Input file specified.
         out_file_name: Output file specified.
         parent_column: The name of the column holding the count of parent company.
         publishable_indicator: The name of the column to put "publish" marker.
         stage5_threshold: The threshold used in the disclosure calculation.
+        survey: The survey selected to be used in the logger.
         threshold: The threshold used in the disclosure steps.
         top1_column: The name of the column largest contributor to the cell.
         top2_column: The name of the column second largest contributor to the cell.
@@ -78,7 +82,6 @@ def lambda_handler(event, context):
     """
     current_module = "Disclosure Wrangler"
     error_message = ""
-    logger = general_functions.get_logger()
     # Set-up variables for status message
     current_step_num = "6"
     bpm_queue_url = None
@@ -90,10 +93,7 @@ def lambda_handler(event, context):
         run_id = event["RuntimeVariables"]["run_id"]
 
         environment_variables = EnvironmentSchema().load(os.environ)
-
         runtime_variables = RuntimeSchema().load(event["RuntimeVariables"])
-
-        logger.info("Validated parameters.")
 
         # Environment Variables
         bucket_name = environment_variables["bucket_name"]
@@ -104,6 +104,7 @@ def lambda_handler(event, context):
         cell_total_column = runtime_variables["cell_total_column"]
         disclosivity_marker = runtime_variables["disclosivity_marker"]
         disclosure_stages = runtime_variables["disclosure_stages"]
+        environment = runtime_variables["environment"]
         explanation = runtime_variables["explanation"]
         final_output_location = runtime_variables["final_output_location"]
         in_file_name = runtime_variables["in_file_name"]
@@ -112,14 +113,30 @@ def lambda_handler(event, context):
         publishable_indicator = runtime_variables["publishable_indicator"]
         sns_topic_arn = runtime_variables["sns_topic_arn"]
         stage5_threshold = runtime_variables["stage5_threshold"]
+        survey = runtime_variables["survey"]
         threshold = runtime_variables["threshold"]
         top1_column = runtime_variables["top1_column"]
         top2_column = runtime_variables["top2_column"]
         total_columns = runtime_variables["total_columns"]
         total_steps = runtime_variables["total_steps"]
         unique_identifier = runtime_variables["unique_identifier"]
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
+        raise exception_classes.LambdaFailure(error_message)
 
-        logger.info("Retrieved configuration variables.")
+    try:
+        logger = general_functions.get_logger(survey, current_module, environment,
+                                              run_id)
+    except Exception as e:
+        error_message = general_functions.handle_exception(e, current_module,
+                                                           run_id, context=context,
+                                                           bpm_queue_url=bpm_queue_url)
+        raise exception_classes.LambdaFailure(error_message)
+
+    try:
+        logger.info("Started - retrieved configuration variables.")
 
         # Send start of method status to BPM.
         status = "IN PROGRESS"
@@ -141,11 +158,13 @@ def lambda_handler(event, context):
             "bpm_queue_url": bpm_queue_url,
             "data": formatted_data,
             "disclosivity_marker": disclosivity_marker,
-            "publishable_indicator": publishable_indicator,
+            "environment": environment,
             "explanation": explanation,
+            "publishable_indicator": publishable_indicator,
+            "run_id": run_id,
+            "survey": survey,
             "total_columns": total_columns,
-            "unique_identifier": unique_identifier,
-            "run_id": run_id
+            "unique_identifier": unique_identifier
         }
 
         stage1_payload = {
@@ -227,7 +246,7 @@ def lambda_handler(event, context):
             logger.error(error_message)
             raise exception_classes.LambdaFailure(error_message)
 
-    logger.info("Successfully completed module: " + current_module)
+    logger.info("Successfully completed module.")
 
     # Send start of method status to BPM.
     status = "DONE"
