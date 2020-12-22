@@ -158,13 +158,13 @@ def lambda_handler(event, context):
             "bpm_queue_url": bpm_queue_url,
             "data": formatted_data,
             "disclosivity_marker": disclosivity_marker,
-            "publishable_indicator": publishable_indicator,
-            "explanation": explanation,
-            "total_columns": total_columns,
-            "unique_identifier": unique_identifier,
-            "run_id": run_id,
             "environment": environment,
-            "survey": survey
+            "explanation": explanation,
+            "publishable_indicator": publishable_indicator,
+            "run_id": run_id,
+            "survey": survey,
+            "total_columns": total_columns,
+            "unique_identifier": unique_identifier
         }
 
         stage1_payload = {
