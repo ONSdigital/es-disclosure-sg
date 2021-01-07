@@ -46,7 +46,7 @@ class RuntimeSchema(Schema):
     top1_column = fields.Str(required=True)
     top2_column = fields.Str(required=True)
     total_columns = fields.List(fields.String, required=True)
-    total_steps = fields.Str(required=True)
+    total_steps = fields.Int(required=True)
     unique_identifier = fields.List(fields.String, required=True)
 
 
@@ -83,7 +83,7 @@ def lambda_handler(event, context):
     current_module = "Disclosure Wrangler"
     error_message = ""
     # Set-up variables for status message
-    current_step_num = "6"
+    current_step_num = 6
     bpm_queue_url = None
     # Define run_id outside of try block
     run_id = 0
