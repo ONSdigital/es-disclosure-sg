@@ -91,7 +91,7 @@ wrangler_runtime_variables = {
             "top1_column": "largest_contributor",
             "top2_column": "second_largest_contributor",
             "total_columns": ["Q608_total", "Q606_other_gravel"],
-            "total_steps": "6",
+            "total_steps": 6,
             "unique_identifier": ["responder_id"]
         }
 }
