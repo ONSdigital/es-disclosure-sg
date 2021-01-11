@@ -218,11 +218,13 @@ def lambda_handler(event, context):
                 "bpm_queue_url": bpm_queue_url,
                 "data": formatted_data["data"],
                 "disclosivity_marker": disclosivity_marker,
-                "publishable_indicator": publishable_indicator,
+                "environment": environment,
                 "explanation": explanation,
+                "publishable_indicator": publishable_indicator,
+                "run_id": run_id,
+                "survey": survey,
                 "total_columns": total_columns,
-                "unique_identifier": unique_identifier,
-                "run_id": run_id
+                "unique_identifier": unique_identifier
             }
 
         aws_functions.save_to_s3(bucket_name, out_file_name, formatted_data["data"])
